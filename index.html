@@ -1,0 +1,3354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRISP-AI v2.0: Cross-Scale Learning Progression &amp; Process Telemetry Engine | NC State Ph.D. Prototype (Hasan &amp; Delgado)</title>
+<style>
+:root {
+  --primary-navy: #0d2137;
+  --secondary-navy: #173456;
+  --ncsu-red: #cc0000;
+  --ncsu-red-dark: #990000;
+  --academic-gold: #c5a059;
+  --gold-hover: #b5924b;
+  --parchment-bg: #FAF8F5;
+  --card-bg: #FFFFFF;
+  --border-color: #d1c7b7;
+  --text-primary: #222222;
+  --text-secondary: #4a4a4a;
+  --correct-green: #2e7d32;
+  --incorrect-red: #c62828;
+  --warning-amber: #e65100;
+  --accent-blue: #0d47a1;
+  --teal-accent: #00897b;
+  --shadow-soft: 0 4px 20px rgba(0,0,0,0.06);
+  --shadow-hard: 0 8px 30px rgba(13,33,55,0.15);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: "Times New Roman", Times, "Liberation Serif", serif;
+  background: var(--parchment-bg);
+  color: var(--text-primary);
+  line-height: 1.6;
+  font-size: 16px;
+  padding-bottom: 100px;
+}
+
+/* TOP STATUS & CONTROL BAR */
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: linear-gradient(135deg, var(--primary-navy), var(--secondary-navy));
+  color: #fff;
+  padding: 8px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+  border-bottom: 3px solid var(--academic-gold);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.top-bar-title {
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 0.4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ncsu-badge {
+  background: var(--ncsu-red);
+  color: #fff;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(255,255,255,0.5);
+}
+.engine-badge {
+  background: linear-gradient(135deg, var(--teal-accent), #2e7d32);
+  color: #fff;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: bold;
+  border: 1px solid rgba(255,255,255,0.4);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.logit-pill {
+  background: rgba(255,255,255,0.14);
+  color: #ffe082;
+  border: 1px solid var(--academic-gold);
+  font-size: 11.5px;
+  padding: 2px 9px;
+  border-radius: 10px;
+  font-weight: bold;
+  font-variant-numeric: tabular-nums;
+}
+.condition-pill {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  border: 1px solid var(--academic-gold);
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.condition-pill:hover { background: rgba(255,255,255,0.28); }
+.fading-pill {
+  background: rgba(0,137,123,0.3);
+  color: #a7ffeb;
+  border: 1px solid #00bfa5;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.autosave-pill {
+  font-size: 11px;
+  color: #81c784;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0,0,0,0.25);
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.timer-badge {
+  background: #fff;
+  color: var(--primary-navy);
+  padding: 4px 9px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: bold;
+  border: 2px solid var(--academic-gold);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 105px;
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
+}
+.timer-badge.warning { background: #fff3e0; color: var(--warning-amber); border-color: #ff9800; }
+.timer-badge.danger { background: #ffebee; color: #b71c1c; border-color: #f44336; animation: pulse 1.2s infinite; }
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+
+/* BUTTONS */
+.btn {
+  font-family: "Times New Roman", Times, serif;
+  padding: 5px 10px;
+  font-size: 12.5px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
+  border: none;
+}
+.btn-gold { background: linear-gradient(180deg, #dfb96c, var(--academic-gold)); color: var(--primary-navy); border: 1px solid #9c7c36; }
+.btn-gold:hover { background: var(--gold-hover); }
+.btn-navy { background: var(--primary-navy); color: #fff; border: 1px solid var(--academic-gold); }
+.btn-navy:hover { background: var(--secondary-navy); }
+.btn-pdf { background: linear-gradient(180deg, #cc0000, #880e4f); color: #fff; border: 1px solid #5f0937; }
+.btn-pdf:hover { background: #880e4f; }
+.btn-report { background: linear-gradient(180deg, #004d80, #002f4f); color: #fff; border: 1px solid #002239; }
+.btn-report:hover { background: #00385c; }
+.btn-teacher { background: #4a148c; color: #fff; border: 1px solid #7b1fa2; font-size: 12px; padding: 5px 9px; }
+.btn-teacher:hover { background: #6a1b9a; }
+.btn-help-teacher { background: #e65100; color: #fff; border: 1px solid #bf360c; font-size: 12px; padding: 5px 9px; border-radius: 20px; }
+.btn-help-teacher:hover { background: #bf360c; }
+.btn-unlock { background: linear-gradient(180deg, var(--teal-accent), #00695c); color: #fff; border: 1px solid #004d40; font-size: 14px; padding: 8px 18px; }
+.btn-unlock:hover { background: #00695c; }
+.btn-asset { background: #fff; color: #0d47a1; border: 1.5px solid #90caf9; font-size: 12px; padding: 3px 8px; border-radius: 3px; cursor: pointer; }
+.btn-asset:hover { background: #e3f2fd; border-color: #1976d2; }
+.btn-custom-sub { background: #fdfbf7; color: #6a4f10; border: 1.5px dashed var(--academic-gold); font-size: 13px; padding: 4px 10px; border-radius: 3px; cursor: pointer; }
+.btn-custom-sub:hover { background: #f7eedb; }
+
+/* STAGE NAVIGATION STRIP */
+.imrad-nav-strip {
+  background: #fff;
+  border-bottom: 2px solid var(--border-color);
+  padding: 8px 16px;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  overflow-x: auto;
+  position: sticky;
+  top: 48px;
+  z-index: 990;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  flex-wrap: wrap;
+}
+.tab-btn {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 6px 11px;
+  border: 1px solid #d1c7b7;
+  background: #fdfbf7;
+  color: #333;
+  border-radius: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.tab-btn:hover:not(.locked) { background: #f0ece1; color: var(--primary-navy); }
+.tab-btn.active { background: var(--primary-navy) !important; color: #fff !important; border-color: var(--academic-gold) !important; box-shadow: 0 2px 6px rgba(13,33,55,0.25); }
+.tab-btn.completed { border-color: #2e7d32; background: #e8f5e9; color: #1b5e20; }
+.tab-btn.transfer-stage { border-color: #b71c1c; color: #b71c1c; }
+.tab-btn.transfer-stage.active { background: #b71c1c !important; color: #fff !important; border-color: #ff8a80 !important; }
+.tab-btn.locked { background: #eee; color: #999; border-color: #ccc; cursor: not-allowed; opacity: 0.65; }
+.tab-btn .tab-time { font-size: 10px; opacity: 0.85; background: rgba(0,0,0,0.08); padding: 1px 5px; border-radius: 10px; }
+.tab-btn.active .tab-time { background: rgba(255,255,255,0.2); color: #fff; }
+
+/* CONTAINER & LAYOUT */
+.container {
+  max-width: 1440px;
+  margin: 20px auto;
+  padding: 0 18px;
+  display: grid;
+  grid-template-columns: 1fr 355px;
+  gap: 24px;
+}
+@media (max-width: 1120px) { .container { grid-template-columns: 1fr; } }
+
+.paper {
+  background: var(--card-bg);
+  border: 2px solid var(--border-color);
+  box-shadow: var(--shadow-soft);
+  padding: 32px;
+  border-radius: 4px;
+  position: relative;
+}
+.paper::before {
+  content: "";
+  position: absolute;
+  top: 6px; left: 6px; right: 6px; bottom: 6px;
+  border: 1px solid rgba(197,160,89,0.35);
+  pointer-events: none;
+}
+
+/* MANUSCRIPT HEADER */
+.manuscript-header {
+  text-align: center;
+  border-bottom: 2px solid var(--primary-navy);
+  padding-bottom: 18px;
+  margin-bottom: 22px;
+}
+.springer-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--ncsu-red), var(--primary-navy));
+  color: #fff;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 4px 12px;
+  border-radius: 3px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.manuscript-title-input {
+  font-size: 19px;
+  font-weight: bold;
+  color: #111;
+  line-height: 1.35;
+  text-align: center;
+  width: 100%;
+  border: 1px dashed var(--academic-gold);
+  padding: 8px;
+  background: #fdfaf3;
+  margin-bottom: 10px;
+  font-family: "Times New Roman", Times, serif;
+}
+.manuscript-authors { font-size: 14.5px; font-weight: bold; color: #222; margin-bottom: 4px; }
+.manuscript-affiliations { font-size: 13px; color: #555; font-style: italic; margin-bottom: 6px; }
+
+/* SECTIONS */
+.imrad-section { display: none; }
+.imrad-section.active { display: block; animation: fadeIn 0.25s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+.section-title-bar {
+  background: linear-gradient(90deg, var(--primary-navy), var(--secondary-navy));
+  color: #fff;
+  padding: 11px 16px;
+  margin: 20px 0 15px;
+  border-left: 6px solid var(--academic-gold);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 2px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.section-title-bar h2 { font-size: 16px; letter-spacing: 0.4px; }
+
+.section-toolbar {
+  background: #f0f6ff;
+  border: 1px solid #c5ddff;
+  padding: 9px 14px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.toolbar-label { font-size: 13px; font-weight: bold; color: #0d47a1; display: flex; align-items: center; gap: 5px; }
+.toolbar-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* MODULE CARDS & INTERACTIVE WORKBENCHES */
+.module-card {
+  background: #fdfaf3;
+  border: 1.5px solid var(--border-color);
+  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 18px;
+}
+.module-card-title {
+  font-size: 15px;
+  font-weight: bold;
+  color: var(--primary-navy);
+  border-bottom: 1px solid #d1c7b7;
+  padding-bottom: 6px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* INTERACTIVE CROSS-SCALE SLIDER WORKBENCH */
+.scale-workbench {
+  background: linear-gradient(180deg, #f4f8fd, #ffffff);
+  border: 2px solid #90caf9;
+  border-radius: 6px;
+  padding: 18px;
+  margin-bottom: 20px;
+  box-shadow: 0 3px 12px rgba(13,71,161,0.08);
+}
+.scale-slider-track {
+  width: 100%;
+  margin: 14px 0 8px;
+  accent-color: var(--ncsu-red);
+  height: 8px;
+  cursor: pointer;
+}
+.scale-stops {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--primary-navy);
+  margin-bottom: 12px;
+}
+.scale-visual-stage {
+  background: #0d2137;
+  color: #fff;
+  border-radius: 5px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 16px;
+  align-items: center;
+  border: 1px solid var(--academic-gold);
+}
+@media (max-width: 760px) { .scale-visual-stage { grid-template-columns: 1fr; } }
+
+/* SUBSECTION BLOCK & IN-SITU AI SPOTTER */
+.subsection-block {
+  background: #fff;
+  border: 1.5px solid #dcd4c7;
+  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+  position: relative;
+}
+.subsection-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  border-bottom: 1px dashed #d1c7b7;
+  padding-bottom: 6px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.subsection-title {
+  font-size: 14.5px;
+  font-weight: bold;
+  color: var(--primary-navy);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sub-controls { display: flex; gap: 4px; flex-wrap: wrap; }
+.sub-icon-btn {
+  background: #fdfaf3;
+  border: 1px solid #d1c7b7;
+  color: #555;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.sub-icon-btn:hover { background: var(--primary-navy); color: #fff; border-color: var(--primary-navy); }
+
+/* IN-SITU EMBEDDED AI SPOTTER BOX */
+.inline-ai-spotter {
+  background: #f4f8fd;
+  border: 1.5px solid #bcd7f5;
+  border-radius: 4px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+.spotter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 12.5px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.spotter-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+  border-radius: 12px;
+  font-weight: bold;
+  font-size: 11.5px;
+}
+.status-flow { background: #e8f5e9; color: #1b5e20; border: 1px solid #a5d6a7; }
+.status-reflection { background: #fff8e1; color: #f57f17; border: 1px solid #ffe082; }
+.status-evaluating { background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; }
+.status-hesitation { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
+.status-deliberation { background: #ede7f6; color: #4a148c; border: 1px solid #d1c4e9; }
+.status-struggle { background: #ffebee; color: #b71c1c; border: 1px solid #ef9a9a; animation: pulse 1.5s infinite; }
+.status-stagnation { background: #fce4ec; color: #880e4f; border: 1px solid #f48fb1; }
+.status-offloading { background: #ffcdd2; color: #b71c1c; border: 1px solid #e57373; }
+
+.spotter-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.spotter-btn {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 11.5px;
+  font-weight: bold;
+  padding: 4px 9px;
+  border-radius: 3px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.spotter-btn-l1 { background: #e3f2fd; color: #0d47a1; border-color: #90caf9; }
+.spotter-btn-l1:hover { background: #bbdefb; }
+.spotter-btn-l2 { background: #fff3e0; color: #e65100; border-color: #ffb74d; }
+.spotter-btn-l2:hover { background: #ffe0b2; }
+.spotter-btn-l3 { background: #fce4ec; color: #880e4f; border-color: #f48fb1; }
+.spotter-btn-l3:hover { background: #f8bbd0; }
+.spotter-btn-l4 { background: #e8f5e9; color: #1b5e20; border-color: #a5d6a7; }
+.spotter-btn-l4:hover { background: #c8e6c9; }
+.spotter-btn-shape { background: linear-gradient(135deg, #6a1b9a, #4a148c); color: #fff; border: 1px solid #4a148c; }
+.spotter-btn-shape:hover { background: #4a148c; }
+
+.spotter-btn.gated {
+  opacity: 0.40;
+  filter: grayscale(0.85);
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+/* METADATA INPUTS */
+.meta-label { display: block; font-size: 12.5px; font-weight: bold; color: var(--primary-navy); margin-bottom: 3px; }
+.meta-text {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 14px;
+  border: 1.5px solid #b5a995;
+  border-radius: 4px;
+  background: #fff;
+  color: #111;
+  width: 100%;
+  padding: 5px 8px;
+}
+.meta-text:focus { outline: none; border-color: var(--primary-navy); box-shadow: 0 0 0 3px rgba(13,33,55,0.12); }
+
+/* INLINE SPOTTER RESPONSE CARD */
+.spotter-response-area {
+  margin-top: 8px;
+  background: #fff;
+  border: 1px solid #cbdff2;
+  border-left: 3px solid var(--teal-accent);
+  padding: 8px 12px;
+  border-radius: 3px;
+  font-size: 13px;
+  color: #004d40;
+  display: none;
+  animation: fadeIn 0.2s ease;
+}
+
+/* TEXTAREA & METRICS */
+.editor-textarea {
+  width: 100%;
+  min-height: 145px;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 15px;
+  line-height: 1.6;
+  padding: 12px;
+  border: 1.5px solid #b5a995;
+  border-radius: 4px;
+  background: #fff;
+  color: #111;
+  resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.3s;
+}
+.editor-textarea:focus {
+  outline: none;
+  border-color: var(--primary-navy);
+  box-shadow: 0 0 0 3px rgba(13,33,55,0.12);
+}
+.editor-textarea.paste-blocked {
+  border-color: #d32f2f !important;
+  background: #ffebee !important;
+  box-shadow: 0 0 0 4px rgba(211,47,47,0.25) !important;
+  animation: shake 0.4s ease;
+}
+@keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+
+.word-counter-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #555;
+  margin-top: 4px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.telemetry-micro-stats {
+  font-size: 11.5px;
+  color: #444;
+  display: inline-flex;
+  gap: 12px;
+}
+
+/* ASSETS AREA & SPRINGER TABLES */
+.sub-assets-area { margin: 10px 0; display: flex; flex-direction: column; gap: 10px; }
+.asset-card { background: #fff; border: 1.5px solid #d1c7b7; border-radius: 4px; padding: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
+.asset-card-header { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: bold; color: var(--primary-navy); margin-bottom: 6px; border-bottom: 1px dashed #d1c7b7; padding-bottom: 4px; }
+
+.springer-table-container { margin: 12px 0; overflow-x: auto; background: #fff; padding: 10px; border: 1px solid #e0d8cb; border-radius: 4px; }
+.springer-table { width: 100%; border-collapse: collapse; font-size: 12.5px; border-top: 2px solid #000; border-bottom: 2px solid #000; }
+.springer-table th { border-bottom: 1px solid #000; padding: 6px 8px; text-align: left; font-weight: bold; background: #fbf9f5; }
+.springer-table td { padding: 5px 8px; border-bottom: 1px solid #e0e0e0; vertical-align: top; }
+.springer-table tr:last-child td { border-bottom: none; }
+
+/* FORMULA BOXES */
+.formula-box {
+  background: #f8f9fa;
+  border-left: 4px solid var(--primary-navy);
+  border-top: 1px solid #dee2e6;
+  border-right: 1px solid #dee2e6;
+  border-bottom: 1px solid #dee2e6;
+  padding: 10px 14px;
+  margin: 8px 0;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 14px;
+}
+
+/* GUIDANCE & FORETHOUGHT BOXES */
+.section-guide-box {
+  background: #fdfaf3;
+  border: 1px solid #dcd4c7;
+  border-left: 4px solid var(--academic-gold);
+  padding: 12px 16px;
+  margin-bottom: 18px;
+  font-size: 13.5px;
+  color: #333;
+}
+.section-guide-box strong.guide-title { color: var(--primary-navy); font-size: 14.5px; display: block; margin-bottom: 4px; }
+
+.forethought-card {
+  background: #f0f7ff;
+  border: 1.5px solid #b2d4ff;
+  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.forethought-title { font-size: 15px; font-weight: bold; color: #0d47a1; margin-bottom: 8px; }
+
+.section-confidence-card {
+  background: #f4efe6;
+  border: 1px solid #dcd4c7;
+  padding: 12px 16px;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 20px 0;
+  font-size: 14px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* SIDEBAR: PH.D. PROTOCOL COMPANION */
+.sidebar-card {
+  background: #fff;
+  border: 1.5px solid var(--border-color);
+  border-radius: 4px;
+  padding: 16px;
+  box-shadow: var(--shadow-soft);
+  margin-bottom: 18px;
+}
+.sidebar-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--primary-navy);
+  border-bottom: 2px solid var(--academic-gold);
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.srl-state-badge {
+  font-size: 11px;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.trace-stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 10px 0;
+}
+.trace-stat-box {
+  background: #fbf9f5;
+  border: 1px solid #e2dacd;
+  padding: 7px;
+  border-radius: 3px;
+  text-align: center;
+}
+.trace-stat-val { font-size: 15.5px; font-weight: bold; color: var(--primary-navy); font-variant-numeric: tabular-nums; }
+.trace-stat-lbl { font-size: 10px; color: #666; text-transform: uppercase; }
+
+/* TOASTS */
+.anti-paste-toast {
+  position: fixed;
+  bottom: 25px;
+  left: 50%;
+  transform: translateX(-50%) translateY(180px);
+  background: linear-gradient(135deg, #b71c1c, #d32f2f);
+  color: #fff;
+  padding: 14px 24px;
+  border-radius: 6px;
+  border: 2px solid #ffcdd2;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+  z-index: 3500;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  max-width: 640px;
+}
+.anti-paste-toast.show { transform: translateX(-50%) translateY(0); }
+
+.sys-notice-toast {
+  position: fixed;
+  top: 70px;
+  right: 24px;
+  transform: translateX(420px);
+  background: linear-gradient(135deg, var(--primary-navy), var(--secondary-navy));
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: 6px;
+  border-left: 5px solid var(--academic-gold);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.28);
+  z-index: 4500;
+  font-size: 13.5px;
+  transition: transform 0.3s ease;
+  max-width: 360px;
+}
+.sys-notice-toast.show { transform: translateX(0); }
+
+/* MODALS */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(13,33,55,0.65);
+  backdrop-filter: blur(3px);
+  z-index: 4000;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+.modal-overlay.show { display: flex; animation: fadeIn 0.2s ease; }
+.modal-box {
+  background: #fff;
+  border: 2px solid var(--primary-navy);
+  border-radius: 6px;
+  padding: 24px;
+  max-width: 760px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  max-height: 88vh;
+  overflow-y: auto;
+  position: relative;
+}
+.modal-box-wide { max-width: 980px; }
+.modal-title {
+  font-size: 17px;
+  font-weight: bold;
+  color: var(--primary-navy);
+  border-bottom: 2px solid var(--academic-gold);
+  padding-bottom: 8px;
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #777;
+}
+.modal-close-btn:hover { color: #b71c1c; }
+
+/* KNOWLEDGE BANK ACCORDIONS */
+.kb-accordion { border: 1.5px solid var(--border-color); border-radius: 4px; margin-bottom: 10px; overflow: hidden; background: #fff; }
+.kb-accordion summary {
+  background: linear-gradient(90deg, #f0ece1, #faf7f0);
+  padding: 10px 14px;
+  font-weight: bold;
+  color: var(--primary-navy);
+  cursor: pointer;
+  font-size: 13.5px;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-left: 4px solid var(--academic-gold);
+}
+.kb-accordion summary::-webkit-details-marker { display: none; }
+.kb-accordion summary::after { content: "▸"; margin-left: auto; color: var(--academic-gold); font-size: 15px; transition: transform 0.2s; }
+.kb-accordion[open] summary::after { transform: rotate(90deg); }
+.kb-accordion[open] summary { border-bottom: 1px solid var(--border-color); }
+.kb-accordion .kb-body { padding: 12px 14px; font-size: 13px; }
+
+/* PRINT VIEW FOR SPRINGER NATURE PDF MANUSCRIPT & REPORT */
+@media screen {
+  #printManuscriptContainer, #printReportContainer { display: none !important; }
+}
+
+@media print {
+  body { background: #fff !important; color: #000 !important; font-size: 10pt !important; padding: 0 !important; }
+  .top-bar, .imrad-nav-strip, .sidebar-col, .anti-paste-toast, .sys-notice-toast, .sub-controls, .spotter-actions, .spotter-header, .toolbar-actions, .btn, .modal-overlay, .container { display: none !important; }
+  #printManuscriptContainer.print-active, #printReportContainer.print-active { display: block !important; visibility: visible !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
+  .springer-print-header { text-align: center; margin-bottom: 18pt; border-bottom: 1.5pt solid #000; padding-bottom: 10pt; }
+  .springer-print-title { font-size: 14pt; font-weight: bold; margin-bottom: 8pt; line-height: 1.25; }
+  .springer-print-authors { font-size: 10pt; font-weight: bold; margin-bottom: 4pt; }
+  .springer-print-affil { font-size: 8.5pt; font-style: italic; color: #444; margin-bottom: 8pt; }
+  .springer-print-h2 { font-size: 11.5pt; font-weight: bold; border-bottom: 0.75pt solid #000; margin-top: 14pt; margin-bottom: 6pt; text-transform: uppercase; }
+  .springer-print-h3 { font-size: 10pt; font-weight: bold; margin-top: 10pt; margin-bottom: 4pt; }
+  .springer-print-p { font-size: 9.5pt; line-height: 1.45; text-align: justify; margin-bottom: 8pt; text-indent: 1.5em; }
+  .springer-print-table { width: 100%; border-collapse: collapse; margin: 10pt 0; font-size: 8.5pt; border-top: 1.5pt solid #000; border-bottom: 1.5pt solid #000; }
+  .springer-print-table th { border-bottom: 0.75pt solid #000; padding: 4pt; text-align: left; font-weight: bold; }
+  .springer-print-table td { padding: 3pt 4pt; border-bottom: 0.5pt solid #ddd; }
+  .springer-print-caption { font-size: 8.5pt; font-weight: bold; margin-bottom: 4pt; }
+  @page { size: letter; margin: 0.75in; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOP STICKY BAR -->
+<header class="top-bar">
+  <div class="top-bar-title">
+    <span class="ncsu-badge">NC STATE STEM ED</span>
+    <span>🔬 CRISP-AI v2.0: Scale LP &amp; Process Telemetry</span>
+    <span class="logit-pill" id="topRaschBadge" title="Live Rasch Partial Credit Model Ability Estimate (Delgado 2015 Scale LP)">📐 θ = +0.82 logits (LP Level 3: Mechanistic)</span>
+    <span class="condition-pill" onclick="openConditionModal()" id="activeConditionBadge" title="2×2 Factorial Condition Selector">🔬 C4: ZPD+1 LP + Contingent Faded + Teacher Triage</span>
+    <span class="fading-pill" id="fadingStatusBadge">📉 Fading: Tier 1–3 Active</span>
+    <span class="autosave-pill" id="autosaveStatus">💾 100ms UTC Sync</span>
+  </div>
+  <div class="top-actions">
+    <button class="btn btn-gold" onclick="loadDelgadoMasterExemplar()" title="Populate or Reset Full NC State Ph.D. Proposal Exemplar">⚡ Reset Master Exemplar</button>
+    <button class="btn btn-help-teacher" onclick="triggerStudentHelpRequest()" id="btnHelpTeacher" title="Signal teacher for Tier-2 assistance">🙋 Tier-2 Help</button>
+    <button class="btn btn-teacher" id="btnTeacherPanel" onclick="openTeacherDashboard()" title="Open Two-Tiered Teacher Triage Dashboard">👨‍🏫 Teacher Triage</button>
+    <div class="timer-badge" id="sectionTimerDisplay">⏱️ 40:00</div>
+    <button class="btn btn-gold" onclick="openKnowledgeBank()" title="Open Delgado Scale LP Rubric &amp; 10 High-School Presenter Analogies">📚 Analogy &amp; LP Bank</button>
+    <button class="btn btn-report" onclick="generateDiagnosticReport()" title="Generate Rasch, HMM, ENA &amp; TreeSHAP Telemetry Report">📊 Trace Report</button>
+    <button class="btn btn-pdf" onclick="compileAndPrintPdf()" title="Download Springer/APA Ph.D. Proposal Manuscript PDF">📄 Springer PDF</button>
+    <button class="btn btn-gold" onclick="exportTraceDataset()" title="Export 100ms UTC JSON Telemetry">💾 JSON</button>
+    <button class="btn btn-gold" onclick="exportTraceCSV()" title="Export Tidy CSV Trace for R/Python">📤 CSV</button>
+  </div>
+</header>
+
+<!-- 7-STAGE DELGADO PH.D. WORKFLOW NAVIGATION STRIP -->
+<nav class="imrad-nav-strip" id="imradNav">
+  <button class="tab-btn active completed" id="tab-setup" onclick="switchSection('setup')"><span>1. Setup &amp; Delgado OMC Pre-LP</span></button>
+  <button class="tab-btn completed" id="tab-intro" onclick="switchSection('intro')"><span>2. Intro, 3 Gaps &amp; 3-Study Matrix</span><span class="tab-time">40m</span></button>
+  <button class="tab-btn completed" id="tab-methods" onclick="switchSection('methods')"><span>3. 5E Bio/Chem Scale Slider &amp; ZPD+1</span><span class="tab-time">40m</span></button>
+  <button class="tab-btn completed" id="tab-results" onclick="switchSection('results')"><span>4. CRT Power (DEFF=3.32) &amp; Pipeline</span><span class="tab-time">40m</span></button>
+  <button class="tab-btn completed" id="tab-discussion" onclick="switchSection('discussion')"><span>5. Rasch PCM, 3-Level HLM &amp; ANCOVA</span><span class="tab-time">40m</span></button>
+  <button class="tab-btn completed" id="tab-references" onclick="switchSection('references')"><span>6. HMM, LSA, ENA, TreeSHAP &amp; Refs</span><span class="tab-time">40m</span></button>
+  <button class="tab-btn transfer-stage" id="tab-transfer" onclick="switchSection('transfer')"><span>7. 🎯 Week-10 Far Transfer &amp; OSF/IRB</span><span class="tab-time">30m</span></button>
+</nav>
+
+<!-- MAIN CONTAINER -->
+<main class="container">
+  <article class="paper" id="paperContainer">
+    <header class="manuscript-header">
+      <span class="springer-badge">North Carolina State University • Ph.D. in Learning &amp; Teaching in STEM (Science Education • Fall 2027)</span>
+      <input type="text" id="displayProjectTitle" class="manuscript-title-input" value="Modeling Learning Progressions in Secondary STEM Through Adaptive Process Telemetry: Scale, Systems Modeling &amp; Trace-Contingent Scaffold Fading" oninput="saveStateToLocalStorage()" title="Click to edit Ph.D. dissertation title">
+      <div class="manuscript-authors" id="displayAuthors">Doctoral Candidate: MD Showket Hasan (Head of Science, SMBP, Thailand | ORCID: 0000-0002-8868-6451)</div>
+      <div class="manuscript-affiliations" id="displayAffiliations">
+        Prospective Advisor: Dr. Cesar Delgado, Ph.D. (Associate Professor, Department of STEM Education, NC State University)<br>
+        Departmental Synergies: Dr. Gail Jones (Scale Cognition &amp; Nanoscience) &amp; Dr. Soonhye Park (PCK &amp; Teacher Dashboards)
+      </div>
+    </header>
+
+    <!-- ======================================================================
+         STAGE 1: SETUP, BASELINE COVARIATES & DELGADO (2015) OMC PRE-LP
+         ====================================================================== -->
+    <section class="imrad-section active" id="sec-setup">
+      <div class="section-title-bar">
+        <h2>Stage 1: Setup, Baseline Covariates &amp; Week-1 Delgado (2015) OMC Pre-LP Assessment</h2>
+        <span style="font-size:12px;opacity:0.9">Baseline IRT Calibration (θ<sub>pre</sub>) &amp; Covariates</span>
+      </div>
+
+      <div class="section-guide-box">
+        <strong class="guide-title">📋 Stage 1 Protocol: Doctoral Architecture &amp; Baseline Scale LP Calibration</strong>
+        Configure candidate/cohort metadata, record baseline covariates (standardized STEM GPA <em>z</em>-score and Bilingual Track Moderator <em>W</em>), and administer the <strong>Delgado (2015) Ordered Multiple-Choice (OMC) Cross-Scale Diagnostic Items</strong> where each distractor maps explicitly onto LP Levels 1–3 and the key maps to LP Level 4.
+      </div>
+
+      <div class="module-card">
+        <div class="module-card-title">
+          <span>🔬 Doctoral Research Team, Advisory Alignment &amp; Classroom Context</span>
+          <span style="font-size:11.5px;color:#0d47a1;">NC State STEM Education • Fall 2027</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-bottom:14px;">
+          <div>
+            <label class="meta-label">Focal STEM Content Domains (5E Inquiry):</label>
+            <select id="metaDiscipline" class="meta-text" onchange="saveStateToLocalStorage()">
+              <option value="5E Biology (Cellular Respiration / ATP) &amp; 5E Chemistry (Stoichiometry)" selected>5E Biology (Cellular Respiration / ATP) &amp; 5E Chemistry (Stoichiometry)</option>
+              <option value="5E Chemistry: Sub-Microscopic Reaction Stoichiometry &amp; Limiting Yields">5E Chemistry: Sub-Microscopic Reaction Stoichiometry &amp; Limiting Yields</option>
+              <option value="5E Biology: Mitochondrial Electron Transport &amp; Organismal Homeostasis">5E Biology: Mitochondrial Electron Transport &amp; Organismal Homeostasis</option>
+              <option value="Week-10 Far Transfer: Ecological Carbon Cycling &amp; Le Chatelier Equilibrium">Week-10 Far Transfer: Ecological Carbon Cycling &amp; Le Chatelier Equilibrium</option>
+            </select>
+          </div>
+          <div>
+            <label class="meta-label">Target Institution &amp; Pilot Partnership:</label>
+            <input type="text" id="metaSchool" class="meta-text" value="NC State STEM Ed Partner Schools &amp; SMBP Chalermkwansatree School (Thailand)" oninput="saveStateToLocalStorage()">
+          </div>
+          <div>
+            <label class="meta-label">Bilingual Track Moderator (W):</label>
+            <select id="metaBilingualTrack" class="meta-text" onchange="recalculateBaselineLogit()">
+              <option value="1" selected>W = 1: Bilingual Immersion Track (English–Thai / English–Spanish Dual Track)</option>
+              <option value="0">W = 0: Standard Monolingual Track (General Secondary STEM)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-bottom:12px;">
+          <div><label class="meta-label">Lead Doctoral Researcher:</label><input type="text" id="metaStudent1" class="meta-text" value="MD Showket Hasan (PI / Doctoral Candidate)" oninput="saveStateToLocalStorage()"></div>
+          <div><label class="meta-label">Study 1 Focus (Yr 1–2 | N=180):</label><input type="text" id="metaStudent2" class="meta-text" value="Construct Validity, Rasch PCM &amp; 24 Think-Alouds" oninput="saveStateToLocalStorage()"></div>
+          <div><label class="meta-label">Study 2 Focus (Yr 2–3 | N=240, k=8):</label><input type="text" id="metaStudent3" class="meta-text" value="2×2 Cluster Randomized Trial &amp; 3-Level HLM (CR2)" oninput="saveStateToLocalStorage()"></div>
+          <div><label class="meta-label">Study 3 Focus (Yr 3 | N=240 Wk 10):</label><input type="text" id="metaStudent4" class="meta-text" value="Contingent Fading &amp; Unassisted Far Transfer" oninput="saveStateToLocalStorage()"></div>
+          <div><label class="meta-label">ML &amp; Psychometric Engine:</label><input type="text" id="metaStudent5" class="meta-text" value="HMM Viterbi, LSA, ENA &amp; XGBoost + TreeSHAP" oninput="saveStateToLocalStorage()"></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;">
+          <div><label class="meta-label">Prospective Primary Ph.D. Advisor:</label><input type="text" id="metaAdvisor1" class="meta-text" value="Dr. Cesar Delgado, Ph.D. (Associate Professor, NC State University)" oninput="saveStateToLocalStorage()"></div>
+          <div><label class="meta-label">Committee / Departmental Synergies:</label><input type="text" id="metaAdvisor2" class="meta-text" value="Dr. Gail Jones (Scale LP) &amp; Dr. Soonhye Park (PCK / MetaDash)" oninput="saveStateToLocalStorage()"></div>
+        </div>
+      </div>
+
+      <!-- DELGADO (2015) ORDERED MULTIPLE-CHOICE (OMC) PRE-LP DIAGNOSTIC -->
+      <div class="module-card" style="background:#f4f8fd;border-color:#90caf9;">
+        <div class="module-card-title">
+          <span>📐 Delgado (2015) Ordered Multiple-Choice (OMC) Baseline Scale LP Calibration</span>
+          <span class="logit-pill" style="background:var(--primary-navy);color:#ffe082;" id="omcCalculatedBadge">θ<sub>pre</sub> = +0.45 logits | Baseline Level 3</span>
+        </div>
+        <p style="font-size:13px;color:#333;margin-bottom:12px;">
+          Each item distractor explicitly corresponds to a discrete anchor on Delgado's (2015) 4-Level Scale Learning Progression. Selecting responses dynamically updates the student's baseline Rasch ability estimate (θ<sub>pre</sub>).
+        </p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px;">
+          <div style="background:#fff;padding:12px;border:1px solid #cbdff2;border-radius:4px;">
+            <label class="meta-label" style="color:#0d47a1;">OMC Item 1 (Cross-Scale Biology: Cellular Respiration &amp; ATP):</label>
+            <p style="font-size:12.5px;margin-bottom:6px;color:#444;">How does oxygen inhalation at the organism scale (10<sup>0</sup> m) drive ATP synthesis in the mitochondrion (10<sup>−6</sup> m)?</p>
+            <select id="omcItemBio" class="meta-text" onchange="recalculateBaselineLogit()">
+              <option value="1">[LP Level 1 | θ = -1.4] Air enters the lungs so the body has energy to move and stay warm.</option>
+              <option value="2">[LP Level 2 | θ = -0.4] Oxygen goes into cells and mitochondria where ATP molecules are located.</option>
+              <option value="3" selected>[LP Level 3 | θ = +0.6] Diatomic oxygen (10⁻¹⁰ m) accepts electrons at Complex IV, maintaining the proton gradient across the cristae (10⁻⁶ m).</option>
+              <option value="4">[LP Level 4 | θ = +1.8] Stoichiometric O₂ reduction (6 O₂ : 1 C₆H₁₂O₆) sustains chemiosmotic Δp across cristae to yield ≈ 30–32 ATP, scaling to whole-organism respirometric VO₂ flux.</option>
+            </select>
+          </div>
+
+          <div style="background:#fff;padding:12px;border:1px solid #cbdff2;border-radius:4px;">
+            <label class="meta-label" style="color:#0d47a1;">OMC Item 2 (Cross-Scale Chemistry: Reaction Stoichiometry):</label>
+            <p style="font-size:12.5px;margin-bottom:6px;color:#444;">When 2.0 g of H<sub>2</sub> reacts with 8.0 g of O<sub>2</sub> in a sealed vessel (10<sup>−1</sup> m), why is water yield capped at 9.0 g?</p>
+            <select id="omcItemChem" class="meta-text" onchange="recalculateBaselineLogit()">
+              <option value="1">[LP Level 1 | θ = -1.4] The reactants mix together and some gas is left over as steam in the beaker.</option>
+              <option value="2">[LP Level 2 | θ = −0.4] Hydrogen and oxygen atoms combine to make H₂O molecules, and oxygen runs out first.</option>
+              <option value="3">[LP Level 3 | θ = +0.6] Because H₂ and O₂ react in a 2:1 molecular ratio at 10⁻¹⁰ m, the available O₂ molecules limit further reaction.</option>
+              <option value="4" selected>[LP Level 4 | θ = +1.8] At 10⁻¹⁰ m, 1.00 mol H₂ (6.02 × 10²³ molecules) requires 0.50 mol O₂, but 8.0 g O₂ supplies only 0.25 mol, constraining macroscopic yield to 0.50 mol H₂O (9.0 g).</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;font-size:13px;">
+          <div>
+            <label class="meta-label">Cumulative STEM GPA (<em>z</em>-score Covariate):</label>
+            <select id="baselinePriorKnowledge" class="meta-text" onchange="recalculateBaselineLogit()">
+              <option value="1">z = -1.20 SD (1st Quartile Baseline STEM GPA)</option>
+              <option value="2">z = -0.35 SD (2nd Quartile Baseline STEM GPA)</option>
+              <option value="3" selected>z = +0.45 SD (3rd Quartile Baseline STEM GPA)</option>
+              <option value="4">z = +1.30 SD (4th Quartile Baseline STEM GPA)</option>
+            </select>
+          </div>
+          <div>
+            <label class="meta-label">Baseline Cross-Scale Self-Efficacy (0–100%):</label>
+            <select id="baselineSelfEfficacy" class="meta-text" onchange="saveStateToLocalStorage()">
+              <option value="40">40% - Low Certainty in Cross-Scale Modeling</option>
+              <option value="65">65% - Moderate Confidence in 5E Inquiry</option>
+              <option value="80" selected>80% - High Confidence in Scale &amp; Systems Modeling</option>
+              <option value="95">95% - Very High Confidence (Overconfidence Check)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align:center;margin-top:20px;">
+        <button class="btn btn-unlock" onclick="completeAndUnlockSection('setup', 'intro')">🔓 Save Baseline &amp; Proceed to Stage 2: Introduction &amp; 3-Study Matrix</button>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         STAGE 2: INTRODUCTION, 3 EMPIRICAL GAPS, RQs & 3-STUDY MATRIX
+         ====================================================================== -->
+    <section class="imrad-section" id="sec-intro">
+      <div class="section-title-bar">
+        <h2>Stage 2: 1.0 Empirical Rationale (3 Gaps), Scale LP Rubric &amp; 3-Study Dissertation Matrix</h2>
+        <span style="font-size:12px;opacity:0.9">Delgado (2013, 2015) Scale LP + Winne &amp; Hadwin (1998) COPES</span>
+      </div>
+
+      <!-- VISUAL BENCHMARK SUMMARY: 3 CONVERGENT GAPS & META-ANALYSIS -->
+      <div class="module-card">
+        <div class="module-card-title">
+          <span>📊 Three Convergent Empirical Gaps &amp; Meta-Analytic Effect Size Benchmarks (k = 29, N = 3,709)</span>
+          <span style="font-size:11.5px;color:#b71c1c;font-weight:bold;">The "AI Cognitive Crutch" Collapse</span>
+        </div>
+        <div class="springer-table-container">
+          <table class="springer-table">
+            <thead>
+              <tr>
+                <th>Instructional Scaffolding Condition</th>
+                <th>Immediate Modeling Gain (Hedges' g)</th>
+                <th>Delayed Unassisted Transfer (Hedges' g)</th>
+                <th>Retention / Collapse Delta (Δg)</th>
+                <th>Cognitive &amp; Cross-Scale Mechanism (Delgado, 2015; Hasan, 2027)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Unassisted 5E Inquiry</strong></td>
+                <td>g = 0.18</td>
+                <td>g = 0.15</td>
+                <td>-0.03 (Stalled)</td>
+                <td>Classroom implementation dip; students stall at Level 1 macroscopic descriptions.</td>
+              </tr>
+              <tr style="background:#fff5f5;">
+                <td><strong>Generic Unfaded AI (ChatGPT)</strong></td>
+                <td>g = 0.64</td>
+                <td><strong>g = 0.19 (Collapse!)</strong></td>
+                <td><strong style="color:#b71c1c;">-0.45 (Severe Drop)</strong></td>
+                <td>Students copy balanced equations without linking mole ratios (10<sup>−10</sup> m) to macro yields (10<sup>2</sup> m).</td>
+              </tr>
+              <tr style="background:#e8f5e9;">
+                <td><strong>CRISP-AI Calibrated + Faded (ZPD+1)</strong></td>
+                <td><strong>g = 0.78</strong></td>
+                <td><strong>g = 0.71 (Durable!)</strong></td>
+                <td><strong style="color:#1b5e20;">-0.07 (Sustained)</strong></td>
+                <td>Trace-contingent Socratic prompts bridge adjacent scale orders and fade as θ ≥ 1.5 logits.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 3-STUDY DISSERTATION ARCHITECTURE MATRIX -->
+      <div class="module-card">
+        <div class="module-card-title">
+          <span>🏛️ Sequential Three-Study Dissertation Matrix (RQ1–RQ3 &amp; Hypotheses H1a–H3b)</span>
+          <span style="font-size:11.5px;color:#0d47a1;">NC State Ph.D. Plan</span>
+        </div>
+        <div class="springer-table-container">
+          <table class="springer-table">
+            <thead>
+              <tr>
+                <th>Study Phase</th>
+                <th>Research Question (RQ)</th>
+                <th>Falsifiable Hypotheses (H)</th>
+                <th>Sample &amp; Psychometric / Analytic Design</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Study 1 (Yr 1–2):</strong><br>Trace Construct Validity</td>
+                <td><strong>RQ1:</strong> Do 100ms micro-telemetry log features accurately diagnose student levels on Delgado's 4-level scale LP (θ)?</td>
+                <td><strong>H1a:</strong> Ordered Rasch thresholds (Infit/Outfit MNSQ 0.70–1.30; Rel ≥ 0.80).<br><strong>H1b:</strong> HMM states converge with think-alouds &amp; OMC items (κ ≥ 0.85).</td>
+                <td><strong>N = 180</strong> secondary students; <strong>n = 24</strong> concurrent think-aloud interviews; Masters' Rasch PCM &amp; Viterbi HMM decoding.</td>
+              </tr>
+              <tr>
+                <td><strong>Study 2 (Yr 2–3):</strong><br>Scaffolding Efficacy</td>
+                <td><strong>RQ2:</strong> Does ZPD+1 LP-calibrated Socratic scaffolding accelerate upward LP transitions over generic AI hints?</td>
+                <td><strong>H2a:</strong> Positive ZPD+1 main effect on cross-scale CER depth (<em>g</em> ≥ 0.45).<br><strong>H2b:</strong> Bilingual track moderator (<em>W</em>) shows amplified gains for emergent bilinguals.</td>
+                <td><strong>Cluster Randomized Trial (CRT)</strong>; <em>k</em> = 8 classrooms, <strong>N = 240</strong> across C1–C4; 3-Level HLM with <code>clubSandwich</code> CR2 errors.</td>
+              </tr>
+              <tr>
+                <td><strong>Study 3 (Yr 3):</strong><br>Fading &amp; Far Transfer</td>
+                <td><strong>RQ3:</strong> Does trace-contingent fading promote superior Week-10 unassisted far transfer compared to continuous support?</td>
+                <td><strong>H3a:</strong> Contingent fading prevents post-removal collapse (<em>g</em> ≥ 0.40, <em>p</em> &lt; .01).<br><strong>H3b:</strong> Faded cohorts exhibit higher triadic Macro–Micro–Math ENA density.</td>
+                <td><strong>N = 240</strong> longitudinal Week-10 follow-up; 2×2 Factorial ANCOVA with BH-FDR (<em>q</em> &lt; .05); Ecological Carbon &amp; Le Chatelier transfer tasks.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="section-toolbar">
+        <span class="toolbar-label">⚙️ Stage 2 Manuscript Subsections:</span>
+        <div class="toolbar-actions">
+          <button class="btn-custom-sub" onclick="openAddSubModal('intro')">➕ Add Custom Subsection</button>
+        </div>
+      </div>
+
+      <div id="subs-container-intro"></div>
+
+      <div class="section-confidence-card">
+        <div>
+          <strong>🎯 Metacognitive Monitoring:</strong> Rate Stage 2 confidence (0–100%):
+          <select id="conf-intro" style="font-family:'Times New Roman',serif;padding:3px 8px;margin-left:6px;" onchange="saveStateToLocalStorage()">
+            <option value="50">50% - Low Confidence</option>
+            <option value="75">75% - Moderate Confidence</option>
+            <option value="90" selected>90% - High Confidence</option>
+          </select>
+        </div>
+        <button class="btn btn-unlock" onclick="completeAndUnlockSection('intro', 'methods')">🔓 Proceed to Stage 3: 5E Cross-Scale Inquiry &amp; Slider Telemetry</button>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         STAGE 3: IN-SITU 5E BIO/CHEM INQUIRY & CROSS-SCALE SLIDER TELEMETRY
+         ====================================================================== -->
+    <section class="imrad-section" id="sec-methods">
+      <div class="section-title-bar">
+        <h2>Stage 3: 2.0 In-Situ 5E Bio/Chem Inquiry, Cross-Scale Slider Telemetry &amp; ZPD+1 Spotter</h2>
+        <span style="font-size:12px;opacity:0.9">Weeks 2–5 Intervention • Atomic (10⁻¹⁰ m) ↔ Cellular (10⁻⁵ m) ↔ Macro (10² m)</span>
+      </div>
+
+      <!-- INTERACTIVE CROSS-SCALE SPATIAL SLIDER & 5E SIMULATION WORKBENCH -->
+      <div class="scale-workbench">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+          <div>
+            <strong style="font-size:15.5px;color:var(--primary-navy);">🔬 Interactive Cross-Scale Spatial Modeling Workbench (Delgado Scale LP Anchor)</strong>
+            <div style="font-size:12px;color:#444;">Drag the spatial scale slider across 12 orders of magnitude to inspect sub-microscopic, cellular, and macroscopic mechanisms.</div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <label style="font-size:12px;font-weight:bold;color:var(--primary-navy);">5E Domain:</label>
+            <select id="simDomainSelect" class="meta-text" style="width:auto;padding:4px 8px;font-size:12.5px;" onchange="updateScaleWorkbench()">
+              <option value="bio" selected>🧬 5E Biology: Cellular Respiration &amp; ATP</option>
+              <option value="chem">⚗️ 5E Chemistry: Reaction Stoichiometry</option>
+            </select>
+          </div>
+        </div>
+
+        <input type="range" id="crossScaleSlider" class="scale-slider-track" min="-10" max="2" step="0.5" value="-5" oninput="handleScaleSliderMove(this.value)">
+        <div class="scale-stops">
+          <span>⚛️ 10⁻¹⁰ m (Atomic / Sub-Microscopic)</span>
+          <span>🦠 10⁻⁵ m (Mitochondrial / Mesoscopic)</span>
+          <span>🌱 10² m (Macroscopic / Organism &amp; Lab Vessel)</span>
+        </div>
+
+        <div class="scale-visual-stage">
+          <div id="scaleSvgBox" style="text-align:center;">
+            <!-- Dynamic SVG rendered by JS -->
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px;">
+              <span style="background:var(--academic-gold);color:var(--primary-navy);font-weight:bold;font-size:12px;padding:2px 8px;border-radius:3px;" id="scaleOrderBadge">Current Scale: 10⁻⁵.⁰ m (Cellular / Organelle)</span>
+              <span style="font-size:12px;color:#81c784;font-weight:bold;" id="scaleSweepCounterBadge">🔄 Cross-Scale Sweeps: 4 | θ = +0.82 logits</span>
+            </div>
+            <h4 style="font-size:15px;color:#ffe082;margin-bottom:4px;" id="scaleMechanismTitle">Mitochondrial Cristae Proton Motive Force (Δp) &amp; ATP Synthase</h4>
+            <p style="font-size:13px;line-height:1.45;color:#e0e8f0;margin-bottom:8px;" id="scaleMechanismDesc">
+              At 10⁻⁵ m, NADH/FADH₂ electron transport pumps H⁺ across the inner mitochondrial membrane, coupling sub-microscopic redox stoichiometry (10⁻¹⁰ m) to whole-organism oxygen consumption (10² m).
+            </p>
+            <div style="background:rgba(255,255,255,0.1);border-left:3px solid #00bfa5;padding:6px 10px;font-size:12px;color:#a7ffeb;" id="scaleZpdPromptBox">
+              <strong>🎯 Live ZPD+1 Socratic Probe (Tier 2 Conceptual Bridge):</strong> "When you shift from 10⁻¹⁰ m to 10⁻⁵ m, how does the 6 O₂ : 1 Glucose molar ratio constrain the maximum H⁺ gradient across the cristae?"
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-toolbar">
+        <span class="toolbar-label">⚙️ Stage 3 Manuscript Subsections (In-Situ 5E Protocol &amp; ZPD+1 Scaffolding):</span>
+        <div class="toolbar-actions">
+          <button class="btn-custom-sub" onclick="openAddSubModal('methods')">➕ Add Custom Subsection</button>
+        </div>
+      </div>
+
+      <div id="subs-container-methods"></div>
+
+      <div class="section-confidence-card">
+        <div>
+          <strong>🎯 Metacognitive Monitoring:</strong> Rate Stage 3 confidence (0–100%):
+          <select id="conf-methods" style="font-family:'Times New Roman',serif;padding:3px 8px;margin-left:6px;" onchange="saveStateToLocalStorage()">
+            <option value="50">50% - Low Confidence</option>
+            <option value="75">75% - Moderate Confidence</option>
+            <option value="90" selected>90% - High Confidence</option>
+          </select>
+        </div>
+        <button class="btn btn-unlock" onclick="completeAndUnlockSection('methods', 'results')">🔓 Proceed to Stage 4: Sampling Power Calculator &amp; 5-Stage Pipeline</button>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         STAGE 4: SAMPLING, STATISTICAL POWER CALCULATOR & 5-STAGE PIPELINE
+         ====================================================================== -->
+    <section class="imrad-section" id="sec-results">
+      <div class="section-title-bar">
+        <h2>Stage 4: 3.0 Cluster Randomized Trial (CRT) Power Calculator &amp; 5-Stage Data Pipeline</h2>
+        <span style="font-size:12px;opacity:0.9">DEFF = 3.32 • N<sub>eff</sub> = 72.29 • Power = 0.84</span>
+      </div>
+
+      <!-- INTERACTIVE CRT STATISTICAL POWER & DESIGN EFFECT CALCULATOR -->
+      <div class="module-card" style="background:#f4f8fd;border-color:#90caf9;">
+        <div class="module-card-title">
+          <span>🧮 Interactive Cluster Randomized Trial (CRT) Design Effect &amp; Power Calculator</span>
+          <span style="font-size:12px;font-weight:bold;color:#1b5e20;" id="powerStatusBadge">✅ Power = 0.84 (Exceeds 0.80 Threshold)</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:12px;">
+          <div>
+            <label class="meta-label">Classrooms / Clusters (k):</label>
+            <input type="number" id="calcClustersK" class="meta-text" value="8" min="4" max="30" oninput="recalculateCrtPower()">
+          </div>
+          <div>
+            <label class="meta-label">Students per Classroom (m):</label>
+            <input type="number" id="calcClusterSizeM" class="meta-text" value="30" min="10" max="60" oninput="recalculateCrtPower()">
+          </div>
+          <div>
+            <label class="meta-label">Intraclass Correlation (ICC, ρ):</label>
+            <input type="number" id="calcIccRho" class="meta-text" value="0.08" step="0.01" min="0.01" max="0.30" oninput="recalculateCrtPower()">
+          </div>
+          <div>
+            <label class="meta-label">Target Min. Effect Size (MDES g):</label>
+            <input type="number" id="calcTargetG" class="meta-text" value="0.42" step="0.02" min="0.20" max="1.00" oninput="recalculateCrtPower()">
+          </div>
+        </div>
+        <div class="formula-box" id="crtFormulaOutput">
+          <strong>Design Effect (DEFF):</strong> DEFF = 1 + (<em>m</em> − 1)ρ = 1 + (30 − 1)(0.08) = <strong>3.32</strong> &nbsp;|&nbsp;
+          <strong>Total Sample (<em>N</em>):</strong> <strong>240</strong> &nbsp;|&nbsp;
+          <strong>Effective Sample (<em>N</em><sub>eff</sub>):</strong> <em>N</em> / DEFF = 240 / 3.32 = <strong>72.29</strong> &nbsp;|&nbsp;
+          <strong>Statistical Power (α = .05):</strong> <strong>0.84</strong>
+        </div>
+      </div>
+
+      <div class="section-toolbar">
+        <span class="toolbar-label">⚙️ Stage 4 Manuscript Subsections (Sampling &amp; 5-Stage Data Pipeline):</span>
+        <div class="toolbar-actions">
+          <button class="btn-custom-sub" onclick="openAddSubModal('results')">➕ Add Custom Subsection</button>
+        </div>
+      </div>
+
+      <div id="subs-container-results"></div>
+
+      <div class="section-confidence-card">
+        <div>
+          <strong>🎯 Metacognitive Monitoring:</strong> Rate Stage 4 confidence (0–100%):
+          <select id="conf-results" style="font-family:'Times New Roman',serif;padding:3px 8px;margin-left:6px;" onchange="saveStateToLocalStorage()">
+            <option value="50">50% - Low Confidence</option>
+            <option value="75">75% - Moderate Confidence</option>
+            <option value="90" selected>90% - High Confidence</option>
+          </select>
+        </div>
+        <button class="btn btn-unlock" onclick="completeAndUnlockSection('results', 'discussion')">🔓 Proceed to Stage 5: Rasch PCM, 3-Level HLM &amp; 2×2 ANCOVA</button>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         STAGE 5: DESCRIPTIVE, PSYCHOMETRIC (RASCH PCM) & INFERENTIAL (HLM/ANCOVA)
+         ====================================================================== -->
+    <section class="imrad-section" id="sec-discussion">
+      <div class="section-title-bar">
+        <h2>Stage 5: 4.0 Psychometric (Rasch PCM Wright Map) &amp; Inferential Engine (3-Level HLM &amp; ANCOVA)</h2>
+        <span style="font-size:12px;opacity:0.9">Masters' Rasch PCM • clubSandwich CR2 • BH-FDR (q &lt; .05)</span>
+      </div>
+
+      <!-- FORMAL MATHEMATICAL SPECIFICATIONS & WRIGHT MAP VISUALIZER -->
+      <div class="module-card">
+        <div class="module-card-title">
+          <span>📐 Psychometric &amp; Multi-Level Modeling Formulations (Rasch PCM, 3-Level HLM &amp; 2×2 ANCOVA)</span>
+          <span style="font-size:11.5px;color:#0d47a1;">Q1 Journal Econometric &amp; Psychometric Standards</span>
+        </div>
+        <div class="formula-box">
+          <strong>1. Masters' Rasch Partial Credit Model (PCM):</strong>
+          ln[<em>P</em><sub><em>nix</em></sub> / <em>P</em><sub><em>ni</em>(<em>x</em>−1)</sub>] = θ<sub><em>n</em></sub> − δ<sub><em>ix</em></sub> &nbsp; (Target Infit/Outfit MNSQ: 0.70 ≤ MNSQ ≤ 1.30; Person Separation Reliability ≥ 0.80; Mantel-Haenszel DIF <em>p</em> &gt; .05 across gender &amp; bilingual track <em>W</em>).
+        </div>
+        <div class="formula-box">
+          <strong>2. Three-Level Hierarchical Linear Model (HLM) with <code>clubSandwich</code> CR2 Cluster-Robust Variance:</strong><br>
+          • <em>Level 1 (Repeated Measures t):</em> <em>Y<sub>tij</sub></em> = π<sub>0<em>ij</em></sub> + π<sub>1<em>ij</em></sub>(Time<sub><em>tij</em></sub>) + <em>e<sub>tij</sub></em><br>
+          • <em>Level 2 (Student i):</em> π<sub>0<em>ij</em></sub> = β<sub>00<em>j</em></sub> + β<sub>01<em>j</em></sub>(GPA<sub><em>ij</em></sub>) + β<sub>02<em>j</em></sub>(<em>W<sub>ij</sub></em>) + <em>r</em><sub>0<em>ij</em></sub><br>
+          • <em>Level 3 (Classroom Cluster j):</em> β<sub>00<em>j</em></sub> = γ<sub>000</sub> + γ<sub>010</sub>(Calibration<sub><em>j</em></sub>) + <em>u</em><sub>00<em>j</em></sub><br>
+          • <em>Mixed Combined Model:</em> <em>Y<sub>tij</sub></em> = γ<sub>000</sub> + γ<sub>100</sub>(Time) + γ<sub>010</sub>(Calib) + γ<sub>110</sub>(Time × Calib) + <em>u</em><sub>00<em>j</em></sub> + <em>r</em><sub>0<em>ij</em></sub> + <em>e<sub>tij</sub></em>
+        </div>
+        <div class="formula-box">
+          <strong>3. 2×2 Factorial ANCOVA &amp; Small-Sample Corrected Hedges' <em>g</em>:</strong><br>
+          <em>Y<sub>ijk</sub></em> = μ + α<sub><em>i</em></sub> + β<sub><em>j</em></sub> + (αβ)<sub><em>ij</em></sub> + γ(<em>X</em><sub>pre,<em>ijk</em></sub> − <em>X̄</em><sub>pre</sub>) + ε<sub><em>ijk</em></sub> &nbsp;|&nbsp;
+          Hedges' <em>g</em> = <em>J</em> × [(<em>Ȳ<sub>T</sub></em> − <em>Ȳ<sub>C</sub></em>) / <em>SD</em><sub>pooled</sub>], &nbsp; where <em>J</em> = 1 − [3 / (4(<em>N<sub>T</sub></em> + <em>N<sub>C</sub></em> − 2) − 1)]
+        </div>
+      </div>
+
+      <div class="section-toolbar">
+        <span class="toolbar-label">⚙️ Stage 5 Manuscript Subsections (Psychometric &amp; Inferential Models):</span>
+        <div class="toolbar-actions">
+          <button class="btn-custom-sub" onclick="openAddSubModal('discussion')">➕ Add Custom Subsection</button>
+        </div>
+      </div>
+
+      <div id="subs-container-discussion"></div>
+
+      <div class="section-confidence-card">
+        <div>
+          <strong>🎯 Metacognitive Monitoring:</strong> Rate Stage 5 confidence (0–100%):
+          <select id="conf-discussion" style="font-family:'Times New Roman',serif;padding:3px 8px;margin-left:6px;" onchange="saveStateToLocalStorage()">
+            <option value="50">50% - Low Confidence</option>
+            <option value="75">75% - Moderate Confidence</option>
+            <option value="90" selected>90% - High Confidence</option>
+          </select>
+        </div>
+        <button class="btn btn-unlock" onclick="completeAndUnlockSection('discussion', 'references')">🔓 Proceed to Stage 6: HMM, LSA, ENA, XGBoost + TreeSHAP &amp; References</button>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         STAGE 6: ADVANCED ML SUITE (HMM, LSA, ENA, TREESHAP) & REFERENCES
+         ====================================================================== -->
+    <section class="imrad-section" id="sec-references">
+      <div class="section-title-bar">
+        <h2>Stage 6: 5.0 Machine Learning Suite (HMM, LSA, ENA &amp; XGBoost + TreeSHAP) &amp; APA References</h2>
+        <span style="font-size:12px;opacity:0.9">Viterbi HMM • LSA (z &gt; 1.96) • Glass-Box TreeSHAP (|φᵢ|)</span>
+      </div>
+
+      <!-- GLASS-BOX TREESHAP FEATURE ATTRIBUTION & HMM TRANSITION MODULE -->
+      <div class="module-card">
+        <div class="module-card-title">
+          <span>🤖 Glass-Box XGBoost + TreeSHAP Feature Attribution (|φ<sub><em>i</em></sub>|) &amp; Markov Transition Equations</span>
+          <span style="font-size:11.5px;color:#1b5e20;font-weight:bold;">5-Fold CV Target AUC ≥ 0.85</span>
+        </div>
+        <div class="formula-box">
+          <strong>Regularized XGBoost Objective &amp; Exact TreeSHAP Attribution (φ<sub><em>i</em></sub>):</strong><br>
+          <em>L</em> = ∑<sub><em>i</em></sub> <em>l</em>(<em>y<sub>i</sub></em>, <em>ŷ<sub>i</sub></em>) + ∑<sub><em>k</em></sub> [γ<em>T<sub>k</sub></em> + ½λ‖<em>w<sub>k</sub></em>‖<sup>2</sup>] &nbsp;|&nbsp;
+          φ<sub><em>i</em></sub> = ∑<sub><em>S</em> ⊆ <em>N</em> \ {<em>i</em>}</sub> [(|<em>S</em>|! (|<em>N</em>| − |<em>S</em>| − 1)!) / |<em>N</em>|!] × [<em>f</em>(<em>S</em> ∪ {<em>i</em>}) − <em>f</em>(<em>S</em>)] &nbsp;|&nbsp;
+          <strong>LSA Residual:</strong> <em>z</em> = (<em>f<sub>ij</sub></em> − <em>e<sub>ij</sub></em>) / √[<em>e<sub>ij</sub></em>(1 − <em>P<sub>i</sub></em>)(1 − <em>P<sub>j</sub></em>)] &gt; 1.96
+        </div>
+        <div style="margin-top:10px;background:#fff;border:1px solid #dcd4c7;padding:12px;border-radius:4px;">
+          <div style="font-size:13px;font-weight:bold;color:var(--primary-navy);margin-bottom:8px;">📊 Live TreeSHAP Global Feature Importance Driving ZPD+1 Socratic Triggers (Mean |φ<sub><em>i</em></sub>|):</div>
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;">
+            <div style="display:grid;grid-template-columns:230px 1fr 60px;align-items:center;gap:8px;">
+              <span><strong>1. Cross-Scale Slider Sweeps</strong></span>
+              <div style="background:#eee;height:14px;border-radius:3px;overflow:hidden;"><div style="width:88%;height:100%;background:#00897b;"></div></div>
+              <span style="font-weight:bold;color:#004d40;">+0.42</span>
+            </div>
+            <div style="display:grid;grid-template-columns:230px 1fr 60px;align-items:center;gap:8px;">
+              <span><strong>2. Pause-to-Revise Latency (&gt;8s)</strong></span>
+              <div style="background:#eee;height:14px;border-radius:3px;overflow:hidden;"><div style="width:74%;height:100%;background:#0d47a1;"></div></div>
+              <span style="font-weight:bold;color:#0d47a1;">+0.35</span>
+            </div>
+            <div style="display:grid;grid-template-columns:230px 1fr 60px;align-items:center;gap:8px;">
+              <span><strong>3. Sub-Micro/Math Co-Occurrence (ENA)</strong></span>
+              <div style="background:#eee;height:14px;border-radius:3px;overflow:hidden;"><div style="width:58%;height:100%;background:#6a1b9a;"></div></div>
+              <span style="font-weight:bold;color:#6a1b9a;">+0.27</span>
+            </div>
+            <div style="display:grid;grid-template-columns:230px 1fr 60px;align-items:center;gap:8px;">
+              <span><strong>4. Zero-Paste Guardrail Compliance</strong></span>
+              <div style="background:#eee;height:14px;border-radius:3px;overflow:hidden;"><div style="width:40%;height:100%;background:#c5a059;"></div></div>
+              <span style="font-weight:bold;color:#6a4f10;">+0.18</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-toolbar">
+        <span class="toolbar-label">⚙️ Stage 6 Manuscript Subsections (Machine Learning Suite &amp; APA 7th References):</span>
+        <div class="toolbar-actions">
+          <button class="btn-custom-sub" onclick="openAddSubModal('references')">➕ Add Custom Subsection</button>
+        </div>
+      </div>
+
+      <div id="subs-container-references"></div>
+
+      <div class="forethought-card" style="background:#f9fbe7;border-color:#dce775;">
+        <h3 class="forethought-title" style="color:#558b2f;">🎯 Metacognitive Self-Reflection &amp; Calibration Audit (Zimmerman Phase 3)</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;font-size:13.5px;">
+          <div>
+            <label style="font-weight:bold;display:block;margin-bottom:4px;">1. Perceived Methodological Rigor (0–100%):</label>
+            <input type="number" id="postPerceivedScore" class="meta-text" value="92" min="0" max="100" oninput="saveStateToLocalStorage()">
+          </div>
+          <div>
+            <label style="font-weight:bold;display:block;margin-bottom:4px;">2. Metacognitive Effort Exerted:</label>
+            <select id="postEffortRating" class="meta-text" onchange="saveStateToLocalStorage()">
+              <option value="High" selected>High (Deep engagement with cross-scale Socratic prompts &amp; psychometric synthesis)</option>
+              <option value="Moderate">Moderate (Balanced use of guidance and independent formulation)</option>
+              <option value="Low">Low (Minimal cognitive effort required)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align:center;margin-top:20px;">
+        <button class="btn btn-unlock" style="font-size:15px;padding:10px 24px;background:#b71c1c;border-color:#880e4f;" onclick="completeAndUnlockSection('references', 'transfer')">
+          🎯 Proceed to Stage 7: Week-10 Unassisted Far Transfer &amp; OSF/IRB Safeguards
+        </button>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         STAGE 7: WEEK-10 UNASSISTED FAR TRANSFER BENCHMARK & OSF/IRB SAFEGUARDS
+         ====================================================================== -->
+    <section class="imrad-section" id="sec-transfer">
+      <div class="section-title-bar" style="background: linear-gradient(90deg, #b71c1c, #880e4f); border-left-color: #ff8a80;">
+        <h2>Stage 7: 6.0 Week-10 Unassisted Far Transfer Task (100% Faded) &amp; OSF/IRB Safeguards</h2>
+        <span style="font-size:12px;opacity:0.9">Autonomy Gap Benchmark • Ecological Carbon &amp; Le Chatelier Equilibrium</span>
+      </div>
+
+      <div class="section-guide-box" style="border-left-color: #b71c1c; background: #fff5f5;">
+        <strong class="guide-title" style="color:#b71c1c;">⚠️ Week-10 Delayed Unassisted Far Transfer Protocol (100% Scaffold Withdrawal)</strong>
+        At Week 10, all AI Socratic spotters, sentence frames, and teacher triage nudges are <strong>completely withdrawn (100% faded)</strong> to test H3a (<em>g</em> ≥ 0.40) and verify whether trace-contingent fading eliminates the post-scaffolding collapse observed in generic AI cohorts.
+        <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <strong style="color:var(--primary-navy);">Select Far Transfer Benchmark Domain:</strong>
+          <select id="transferDomainSelect" class="meta-text" style="width:auto;font-weight:bold;" onchange="switchTransferScenario(this.value)">
+            <option value="eco" selected>🌍 Task A: Ecological Carbon Cycling &amp; Trophic Transfer (Delgado, 2026 Alignment)</option>
+            <option value="chem">⚖️ Task B: Chemical Equilibrium Perturbation (Le Chatelier Cross-Scale Collision Dynamics)</option>
+          </select>
+        </div>
+        <div id="transferPromptDisplay" style="margin-top:8px;padding:8px 12px;background:#fff;border:1px solid #ef9a9a;border-radius:4px;font-size:13px;color:#222;">
+          <strong>Ecological Systems Prompt:</strong> Formulate an unassisted Level-4 Claim–Evidence–Reasoning (CER) synthesis explaining how a 2.5 °C ocean warming perturbation alters phytoplankton RuBisCO carboxylation kinetics (10<sup>−9</sup> m), net primary cellular productivity (10<sup>−5</sup> m), and pelagic trophic biomass transfer (10<sup>5</sup> m).
+        </div>
+      </div>
+
+      <div id="subs-container-transfer"></div>
+
+      <div style="text-align:center;margin-top:25px;display:flex;justify-content:center;gap:15px;flex-wrap:wrap;">
+        <button class="btn btn-pdf" style="font-size:15px;padding:11px 24px;" onclick="compileAndPrintPdf()">🎓 Compile Full Springer/APA Ph.D. Proposal (PDF)</button>
+        <button class="btn btn-report" style="font-size:15px;padding:11px 24px;" onclick="generateDiagnosticReport()">📊 Generate Psychometric &amp; COPES Trace Report</button>
+      </div>
+    </section>
+  </article>
+
+  <!-- SIDEBAR: PH.D. PROTOCOL & RASCH LOGIT COMPANION -->
+  <aside class="sidebar-col">
+    <div class="sidebar-card">
+      <div class="sidebar-title">
+        <span>📐 Live Rasch &amp; Scale LP</span>
+        <span class="srl-state-badge status-flow" id="sidebarLpBadge">LP Level 3</span>
+      </div>
+      <div style="font-size:12.5px;background:#fdfaf3;border:1px solid #dcd4c7;padding:9px;border-radius:4px;margin-bottom:8px;">
+        <div><strong>Latent Ability (θ):</strong> <span id="sidebarThetaVal" style="color:var(--ncsu-red);font-weight:bold;">+0.82 logits</span></div>
+        <div><strong>Delgado (2015) Tier:</strong> <span id="sidebarLpDesc">Emergent Cross-Scale Alignment</span></div>
+        <div><strong>Scale Sweeps:</strong> <span id="sidebarScaleSweeps" style="font-weight:bold;">4 crossings</span></div>
+      </div>
+      <div style="font-size:11.5px;color:#444;line-height:1.4;">
+        • <strong>L4 (θ ≥ 1.5):</strong> Multi-Scale Proportional Fluency<br>
+        • <strong>L3 (0.0 ≤ θ &lt; 1.5):</strong> Adjacent Scale Causal Flow<br>
+        • <strong>L2 (−1.0 ≤ θ &lt; 0.0):</strong> Isolated Micro/Cell Labels<br>
+        • <strong>L1 (θ &lt; −1.0):</strong> Macroscopic Surface Only
+      </div>
+    </div>
+
+    <div class="sidebar-card">
+      <div class="sidebar-title">
+        <span>🧠 COPES 100ms Telemetry</span>
+        <span class="srl-state-badge status-flow" id="sidebarSrlBadge">🟢 FLOW</span>
+      </div>
+      <p style="font-size:11.5px;color:#555;margin-bottom:8px;">
+        Triangulated telemetry tracking slider sweeps, pause-to-revise (&gt;8 s), and typing bursts (Winne &amp; Hadwin, 1998).
+      </p>
+
+      <div class="trace-stat-grid">
+        <div class="trace-stat-box">
+          <div class="trace-stat-val" id="telemetryClicks">0</div>
+          <div class="trace-stat-lbl">Interactions</div>
+        </div>
+        <div class="trace-stat-box">
+          <div class="trace-stat-val" id="telemetryPauses">0</div>
+          <div class="trace-stat-lbl">Pauses (&gt;8s)</div>
+        </div>
+        <div class="trace-stat-box">
+          <div class="trace-stat-val" id="telemetryWpm">0</div>
+          <div class="trace-stat-lbl">WPM Burst</div>
+        </div>
+        <div class="trace-stat-box">
+          <div class="trace-stat-val" id="telemetryRevisions">0</div>
+          <div class="trace-stat-lbl">Revisions</div>
+        </div>
+      </div>
+
+      <div style="margin-top:8px;font-size:12px;background:#f5f5f5;padding:8px;border-radius:3px;border:1px solid #e0e0e0;">
+        <strong>Cognitive State:</strong> <span id="telemetryStateDesc">Active cross-scale synthesis</span><br>
+        <strong>Active Pause:</strong> <span id="telemetryCurrentPause">0s</span> | <strong>Max:</strong> <span id="telemetryMaxPause">0s</span><br>
+        <strong>Competency Index:</strong> <span id="telemetryCompetencyScore">84/100</span>
+      </div>
+    </div>
+
+    <div class="sidebar-card">
+      <div class="sidebar-title">
+        <span>🛡️ Anti-Offloading Guardrail</span>
+        <span style="font-size:11px;background:#ffebee;color:#b71c1c;padding:2px 6px;border-radius:3px;font-weight:bold;">Zero-Paste Active</span>
+      </div>
+      <div style="font-size:13px;margin-bottom:4px;">
+        <strong>Intercepted Pastes:</strong> <span id="blockedPasteDisplay" style="color:#b71c1c;font-weight:bold;">0</span>
+      </div>
+      <p style="font-size:11.5px;color:#666;">
+        Blocks LLM clipboard offloading to preserve productive cross-scale struggle (Delgado, 2024; Bjork, 1994).
+      </p>
+    </div>
+
+    <div class="sidebar-card">
+      <div class="sidebar-title">
+        <span>📝 Proposal Volume</span>
+        <span style="font-size:12px;font-weight:bold;" id="totalWordCountDisplay">0 words</span>
+      </div>
+      <div style="font-size:12px;display:flex;flex-direction:column;gap:4px;" id="sectionWordCountsList">
+        <div>Stage 2 (Intro &amp; RQs): <span id="wc-intro" style="font-weight:bold;">0</span>w</div>
+        <div>Stage 3 (5E &amp; ZPD+1): <span id="wc-methods" style="font-weight:bold;">0</span>w</div>
+        <div>Stage 4 (Power &amp; Pipe): <span id="wc-results" style="font-weight:bold;">0</span>w</div>
+        <div>Stage 5 (Rasch &amp; HLM): <span id="wc-discussion" style="font-weight:bold;">0</span>w</div>
+        <div>Stage 6 (ML &amp; Refs): <span id="wc-references" style="font-weight:bold;">0</span>w</div>
+        <div>Stage 7 (Far Transfer): <span id="wc-transfer" style="font-weight:bold;">0</span>w</div>
+      </div>
+    </div>
+
+    <div class="sidebar-card" style="background:#fbfbfb;">
+      <div class="sidebar-title"><span>📉 Contingent Fading Logic</span></div>
+      <div style="font-size:11.5px;color:#444;line-height:1.45;">
+        • <strong>LP Level 1 (θ &lt; −1.0):</strong> Full Tiers 1–4 + Visual Scale Anchor<br>
+        • <strong>LP Level 2 (−1.0 ≤ θ &lt; 0.0):</strong> Tier 4 Faded; Sub-Micro Bridge<br>
+        • <strong>LP Level 3 (0.0 ≤ θ &lt; 1.5):</strong> Tiers 1–2 Socratic Proportionality<br>
+        • <strong>LP Level 4 / Stage 7:</strong> 100% Withdrawn (Unassisted Transfer)
+      </div>
+    </div>
+  </aside>
+</main>
+
+<!-- ANTI-PASTE TOAST -->
+<div class="anti-paste-toast" id="antiPasteToast">
+  <span style="font-size:22px;">🛑</span>
+  <div>
+    <strong>Zero-Paste Anti-Offloading Guardrail Triggered!</strong><br>
+    External clipboard pasting is intercepted by CRISP-AI telemetry. Articulate cross-scale mechanisms in your own words using the spatial slider and ZPD+1 Socratic prompts.
+  </div>
+</div>
+
+<!-- SYSTEM NOTIFICATION TOAST (REPLACES BROWSER ALERTS) -->
+<div class="sys-notice-toast" id="sysNoticeToast">
+  <div style="font-weight:bold;color:var(--academic-gold);margin-bottom:3px;" id="sysNoticeTitle">System Notification</div>
+  <div id="sysNoticeBody">Action recorded.</div>
+</div>
+
+<!-- RENAME SUBSECTION MODAL (REPLACES BROWSER PROMPT) -->
+<div class="modal-overlay" id="renameSubModal">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-title">
+      <span>✏️ Rename Subsection</span>
+      <button class="modal-close-btn" onclick="closeRenameSubModal()">✕</button>
+    </div>
+    <div style="margin-bottom:14px;">
+      <label class="meta-label">Updated Subsection Title:</label>
+      <input type="text" id="renameSubInput" class="meta-text" placeholder="Enter subsection title...">
+    </div>
+    <div style="text-align:right;display:flex;justify-content:flex-end;gap:8px;">
+      <button class="btn btn-navy" onclick="confirmRenameSub()">Save Title</button>
+      <button class="btn btn-gold" onclick="closeRenameSubModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- SHAPER MODAL -->
+<div class="modal-overlay" id="shaperModal">
+  <div class="modal-box modal-box-wide">
+    <div class="modal-title">
+      <span>✨ ZPD+1 Cross-Scale Writing Shaper (Constrained Socratic Feedback)</span>
+      <button class="modal-close-btn" onclick="closeShaperModal()">✕</button>
+    </div>
+    <div style="font-size:13.5px;color:#444;margin-bottom:15px;" id="shaperContextInfo">
+      Analyzing draft subsection...
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:15px;">
+      <div>
+        <label style="font-weight:bold;font-size:13px;display:block;margin-bottom:4px;">Your Written Draft:</label>
+        <textarea id="shaperCurrentText" class="editor-textarea" style="min-height:180px;background:#fdfdfd;" readonly></textarea>
+      </div>
+      <div>
+        <label style="font-weight:bold;font-size:13px;display:block;margin-bottom:4px;">LP-Calibrated Diagnostic Feedback (Delgado Scale Rubric):</label>
+        <div id="shaperAiFeedback" style="background:#f0f7ff;border:1.5px solid #b2d4ff;padding:12px;border-radius:4px;min-height:180px;font-size:13.5px;color:var(--primary-navy);overflow-y:auto;">
+          Select a diagnostic refinement dimension below...
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #d1c7b7;padding-top:15px;flex-wrap:wrap;gap:10px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-navy" onclick="runShaperStep(1)">1. Cross-Scale Alignment Audit (L1→L4)</button>
+        <button class="btn btn-gold" onclick="runShaperStep(2)">2. Psychometric &amp; Statistical Grounding</button>
+        <button class="btn btn-report" onclick="runShaperStep(3)">3. Springer / JOST / ERR Register Polish</button>
+      </div>
+      <button class="btn btn-navy" onclick="closeShaperModal()">Return to Manuscript</button>
+    </div>
+  </div>
+</div>
+
+<!-- TEACHER DASHBOARD MODAL -->
+<div class="modal-overlay" id="teacherDashboardModal">
+  <div class="modal-box modal-box-wide">
+    <div class="modal-title">
+      <span>👨‍🏫 Two-Tiered Teacher Orchestration &amp; Triage Dashboard (MetaDash / CRISP-AI Synergy)</span>
+      <button class="modal-close-btn" onclick="closeTeacherDashboard()">✕</button>
+    </div>
+    <div style="font-size:13px;color:#555;margin-bottom:15px;">
+      Cohort: <strong id="tdClassroomLabel">5E Secondary Biology &amp; Chemistry Inquiry</strong> | Active Condition: <strong id="tdConditionLabel">C4 — ZPD+1 LP-Calibrated + Contingent Faded + Teacher Triage</strong><br>
+      <span style="font-size:12px;color:#0d47a1;">Two-Tiered Buffered Triage Protocol: Tier 1 (Automated ZPD+1 Socratic prompts) handles transient pauses; Tier 2 alerts the teacher only when a student stalls for &gt;180s or exhibits negative logit progress (Δθ &lt; −0.5 logits).</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-bottom:15px;">
+      <div class="trace-stat-box"><div class="trace-stat-val" id="tdStudentStatus">🟢 LP Level 3</div><div class="trace-stat-lbl">Live Rasch State</div></div>
+      <div class="trace-stat-box"><div class="trace-stat-val" id="tdStruggleScore">Low (12%)</div><div class="trace-stat-lbl">Offload / Stall Risk</div></div>
+      <div class="trace-stat-box"><div class="trace-stat-val" id="tdTotalPauses">0</div><div class="trace-stat-lbl">Reflective Pauses (&gt;8s)</div></div>
+      <div class="trace-stat-box"><div class="trace-stat-val" id="tdAlertCount">0</div><div class="trace-stat-lbl">Tier-2 Teacher Alerts</div></div>
+    </div>
+
+    <h4 style="font-size:14px;color:var(--primary-navy);margin-bottom:8px;">Tier-2 Human Teacher Pedagogical Interventions (Logged to 100ms UTC Stream):</h4>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:15px;">
+      <button class="btn btn-navy" onclick="logTeacherAction('T2_SCALE_ANCHOR_COACH')">🗣️ Coach Cross-Scale Bridge (10⁻¹⁰m ↔ 10²m)</button>
+      <button class="btn btn-gold" onclick="logTeacherAction('T2_STOICHIOMETRY_PROPORTION')">📊 Clarify Molar Proportionality</button>
+      <button class="btn btn-report" onclick="logTeacherAction('T2_METACOGNITIVE_REDIRECT')">🔄 Redirect Trial-and-Error Slider Drag</button>
+      <button class="btn btn-pdf" onclick="logTeacherAction('T2_EXTEND_TIME')">⏱️ Extend Stage (+10 min)</button>
+      <button class="btn" style="background:#2e7d32;color:#fff;" onclick="logTeacherAction('T2_VALIDATE_L4_TRANSFER')">⭐ Validate Level-4 Multi-Scale Schema</button>
+    </div>
+
+    <h4 style="font-size:14px;color:var(--primary-navy);margin-bottom:6px;">Tier-1 &amp; Tier-2 Triage Event Stream:</h4>
+    <div id="teacherActionLogHistory" style="background:#f9f9f9;border:1px solid #e0e0e0;padding:10px;border-radius:4px;max-height:150px;overflow-y:auto;font-size:12.5px;color:#333;">
+      <div>[System Initialized] Tier-1 Automated ZPD+1 Socratic Spotter monitoring 100ms telemetry stream; Tier-2 Teacher Alert threshold armed at &gt;180s stall or Δθ &lt; -0.5 logits.</div>
+    </div>
+  </div>
+</div>
+
+<!-- 2x2 FACTORIAL CONDITION SELECTOR MODAL -->
+<div class="modal-overlay" id="conditionModal">
+  <div class="modal-box">
+    <div class="modal-title">
+      <span>🔬 Study 2: 2×2 Factorial Condition Selector (C1–C4 | k = 8 Classrooms, N = 240)</span>
+      <button class="modal-close-btn" onclick="closeConditionModal()">✕</button>
+    </div>
+    <p style="font-size:13.5px;color:#444;margin-bottom:15px;">
+      Select the experimental treatment cell for the Cluster Randomized Trial. <strong>Factor A:</strong> Prompt Calibration (Generic AI vs. ZPD+1 Scale LP-Calibrated). <strong>Factor B:</strong> Fading &amp; Orchestration (Continuous Unfaded vs. Trace-Contingent Faded + Two-Tiered Teacher Triage).
+    </p>
+
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;font-size:13.5px;">
+      <label style="background:#fdfaf3;border:1.5px solid #d1c7b7;padding:10px;border-radius:4px;cursor:pointer;">
+        <input type="radio" name="expCond" value="C1" onchange="setExperimentCondition('C1')">
+        <strong>Condition 1 (C1 — Generic AI + Continuous Scaffolding):</strong><br>
+        <span style="font-size:12px;color:#666;">Standard uncalibrated AI prompts provided continuously without adaptation to Delgado's LP levels.</span>
+      </label>
+      <label style="background:#fdfaf3;border:1.5px solid #d1c7b7;padding:10px;border-radius:4px;cursor:pointer;">
+        <input type="radio" name="expCond" value="C2" onchange="setExperimentCondition('C2')">
+        <strong>Condition 2 (C2 — Generic AI + Contingent Faded Scaffolding):</strong><br>
+        <span style="font-size:12px;color:#666;">Standard uncalibrated AI prompts with automated fading based on raw task completion counts.</span>
+      </label>
+      <label style="background:#fdfaf3;border:1.5px solid #d1c7b7;padding:10px;border-radius:4px;cursor:pointer;">
+        <input type="radio" name="expCond" value="C3" onchange="setExperimentCondition('C3')">
+        <strong>Condition 3 (C3 — ZPD+1 LP-Calibrated + Continuous Scaffolding):</strong><br>
+        <span style="font-size:12px;color:#666;">Delgado Scale LP-calibrated Socratic prompts targeted at ZPD+1 (θ), provided continuously without fading.</span>
+      </label>
+      <label style="background:#eef7ff;border:1.5px solid #1976d2;padding:10px;border-radius:4px;cursor:pointer;">
+        <input type="radio" name="expCond" value="C4" checked onchange="setExperimentCondition('C4')">
+        <strong>Condition 4 (C4 — ZPD+1 LP-Calibrated + Contingent Faded + Two-Tiered Teacher Triage):</strong><br>
+        <span style="font-size:12px;color:#0d47a1;">Full CRISP-AI intervention combining LP-calibrated ZPD+1 Socratic prompts, Rasch logit-contingent fading, and real-time Two-Tiered Teacher Triage alerts.</span>
+      </label>
+    </div>
+
+    <div style="text-align:right;">
+      <button class="btn btn-navy" onclick="closeConditionModal()">Confirm Experimental Condition</button>
+    </div>
+  </div>
+</div>
+
+<!-- KNOWLEDGE & HIGH-SCHOOL PRESENTER ANALOGY BANK MODAL -->
+<div class="modal-overlay" id="knowledgeBankModal">
+  <div class="modal-box modal-box-wide">
+    <div class="modal-title">
+      <span>📚 Delgado (2015) Cross-Scale LP Rubric &amp; 10 High-School Presenter Analogies</span>
+      <button class="modal-close-btn" onclick="closeKnowledgeBank()">✕</button>
+    </div>
+    <p style="font-size:12.5px;color:#555;margin-bottom:12px;">
+      Translational reference mapping advanced psychometric/ML formulations to Delgado's Scale Learning Progression and intuitive high-school classroom analogies.
+    </p>
+
+    <details class="kb-accordion" open>
+      <summary>📐 1. Delgado's (2015) 4-Level Cross-Scale Learning Progression &amp; COPES Trace Rubric</summary>
+      <div class="kb-body">
+        <div class="springer-table-container">
+          <table class="springer-table">
+            <thead>
+              <tr>
+                <th>LP Level &amp; Rasch Logit (θ)</th>
+                <th>Cross-Scale Reasoning Construct</th>
+                <th>5E Bio / Chem Classroom Anchor</th>
+                <th>COPES 100ms Trace Signature</th>
+                <th>CRISP-AI Adaptive Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Level 4 Upper Anchor</strong><br>(θ ≥ 1.5 logits)</td>
+                <td>Quantifies cross-scale proportions &amp; dynamic equilibrium continuously.</td>
+                <td>Couples mitochondrial ATP stoichiometry with limiting reactant gram yields.</td>
+                <td>Systematic ratio sweeps, pause-to-revise (&gt;8 s), coherent triadic CER.</td>
+                <td>Fade prompts 100%; launch novel transfer challenge.</td>
+              </tr>
+              <tr>
+                <td><strong>Level 3 Mechanistic</strong><br>(0.0 ≤ θ &lt; 1.5 logits)</td>
+                <td>Articulates causal flows across two adjacent spatial scale orders.</td>
+                <td>Traces electron transport or molar flow without proportional bounds.</td>
+                <td>Multi-scale toggling, moderate pauses (5–8 s), partial math links.</td>
+                <td>Deliver Tier-3 Socratic proportionality prompt; fade hints.</td>
+              </tr>
+              <tr>
+                <td><strong>Level 2 Transitional</strong><br>(−1.0 ≤ θ &lt; 0.0 logits)</td>
+                <td>Identifies sub-micro/cellular entities as isolated jumps without causal bridge.</td>
+                <td>Lists organelles or reactants as static labels without system integration.</td>
+                <td>Erratic slider dragging, short pauses (&lt;3 s), unlinked CER.</td>
+                <td>Deliver Tier-2 bridge prompt linking 10<sup>−10</sup> m model to 10<sup>2</sup> m graph.</td>
+              </tr>
+              <tr>
+                <td><strong>Level 1 Lower Anchor</strong><br>(θ &lt; −1.0 logits)</td>
+                <td>Macroscopic surface descriptions only; naive views.</td>
+                <td>Describes visible gas bubbles or temperature change without molecular cause.</td>
+                <td>Single-scale view, rapid trial-and-error, clipboard paste attempts.</td>
+                <td>Activate Tier-1 visual scale anchor; trigger Tier-2 Teacher Alert if stalled &gt;180 s.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </details>
+
+    <details class="kb-accordion" open>
+      <summary>🎓 2. Ten High-School Presenter Analogies for Advanced Psychometric &amp; ML Modules</summary>
+      <div class="kb-body">
+        <div class="springer-table-container">
+          <table class="springer-table">
+            <thead>
+              <tr><th>Methodological Module</th><th>High-School Presenter Classroom Analogy</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>1. Rasch IRT Partial Credit Model</strong></td><td><strong>High-Jump Standards:</strong> Setting a high-jump crossbar at calibrated heights (item step difficulty δ<sub><em>ix</em></sub>) to measure athlete jump capability (student ability θ<sub><em>n</em></sub>) on the same vertical ruler.</td></tr>
+              <tr><td><strong>2. Wright Maps</strong></td><td><strong>Ruler Overlay:</strong> Lining up a student growth chart right next to amusement-park ride height requirements to see exactly which cross-scale tasks each student is ready to tackle.</td></tr>
+              <tr><td><strong>3. 3-Level HLM (CR2)</strong></td><td><strong>Russian Nesting Dolls:</strong> Isolating growth across repeated weekly labs (Doll 1) nested inside individual students (Doll 2) nested inside distinct classroom cultures (Doll 3).</td></tr>
+              <tr><td><strong>4. HMM Latent States</strong></td><td><strong>Mental Weather Forecast:</strong> Inferring whether a student is in Sunny (Level 4 Fluency), Cloudy (Level 2 Transitional), or Stormy (Level 1 Stuck) cognitive weather from their visible click/pause barometer.</td></tr>
+              <tr><td><strong>5. Lag Sequential Analysis (LSA)</strong></td><td><strong>Domino Chain Reaction:</strong> Testing statistically (<em>z</em> &gt; 1.96) whether tipping Domino A (a &gt;8 s reflective pause) reliably causes Domino B (an upward cross-scale revision) to fall next.</td></tr>
+              <tr><td><strong>6. Epistemic Network Analysis (ENA)</strong></td><td><strong>Constellation Map:</strong> Drawing glowing lines between Macroscopic, Sub-Microscopic, and Symbolic stars in a student's explanation to see if they form connected constellations or isolated dots.</td></tr>
+              <tr><td><strong>7. XGBoost Gradient Boosting</strong></td><td><strong>Relay Coaching Team:</strong> A sequence of specialized coaches where each new decision tree focuses specifically on correcting the residual classification errors left by the previous coach.</td></tr>
+              <tr><td><strong>8. TreeSHAP Feature Attribution</strong></td><td><strong>Basketball Box-Score MVPs:</strong> Calculating the exact marginal point contribution (|φ<sub><em>i</em></sub>|) each telemetry behavior (slider sweeps, pauses, revisions) made toward predicting mastery.</td></tr>
+              <tr><td><strong>9. ZPD+1 Socratic Spotter</strong></td><td><strong>Weightlifting Gym Spotter:</strong> A bench-press spotter who never lifts the bar for you, but applies just enough upward nudge when you stall so you complete the conceptual rep yourself.</td></tr>
+              <tr><td><strong>10. Benjamini-Hochberg FDR</strong></td><td><strong>Lab Quality-Control Filter:</strong> Calibrating our statistical sieve across multiple comparisons (<em>q</em> &lt; .05) so exciting discoveries aren't contaminated by false-positive alarms.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </details>
+
+    <div style="text-align:right;margin-top:10px;">
+      <button class="btn btn-navy" onclick="closeKnowledgeBank()">Return to Workspace</button>
+    </div>
+  </div>
+</div>
+
+<!-- ASSET INSERTION MODALS -->
+<div class="modal-overlay" id="tableModal">
+  <div class="modal-box">
+    <div class="modal-title"><span>📊 Insert Springer/APA Scientific Table</span><button class="modal-close-btn" onclick="closeTableModal()">✕</button></div>
+    <div style="margin-bottom:10px;"><label class="meta-label">Table Caption (APA 7th / Springer Style):</label><input type="text" id="tblCaption" class="meta-text" placeholder="Table 1. Empirical Cross-Scale Modeling Outcomes Across Conditions (Mean ± SD)"></div>
+    <div style="margin-bottom:10px;"><label class="meta-label">Headers (Comma-separated):</label><input type="text" id="tblHeaders" class="meta-text" value="Condition, Calibration, Fading, Immediate Gain (g), Week-10 Far Transfer (g)"></div>
+    <div style="margin-bottom:12px;"><label class="meta-label">Rows (One row per line, comma-separated values):</label><textarea id="tblRows" class="editor-textarea" style="min-height:80px;">C1 Control, Generic AI, Continuous, 0.64 ± 0.12, 0.19 ± 0.09
+C2 Faded Generic, Generic AI, Count-Faded, 0.61 ± 0.11, 0.34 ± 0.10
+C3 Calibrated Continuous, ZPD+1 Scale LP, Continuous, 0.76 ± 0.10, 0.48 ± 0.11
+C4 Full CRISP-AI, ZPD+1 Scale LP, Logit-Faded + Triage, 0.78 ± 0.09, 0.71 ± 0.08</textarea></div>
+    <div style="text-align:right;display:flex;justify-content:flex-end;gap:8px;"><button class="btn btn-navy" onclick="confirmInsertTable()">Insert Table</button><button class="btn btn-gold" onclick="closeTableModal()">Cancel</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="chartModal">
+  <div class="modal-box">
+    <div class="modal-title"><span>📈 Insert Empirical Bar Graph</span><button class="modal-close-btn" onclick="closeChartModal()">✕</button></div>
+    <div style="margin-bottom:10px;"><label class="meta-label">Figure Caption:</label><input type="text" id="chartCaption" class="meta-text" value="Fig. 1 Delayed Week-10 Unassisted Far Transfer Effect Sizes (Hedges' g) Across Conditions"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+      <div><label class="meta-label">X-Axis Labels (Comma-separated):</label><input type="text" id="chartXLabels" class="meta-text" value="Unassisted 5E, C1 Generic AI, C3 ZPD+1 Cont, C4 CRISP-AI Faded"></div>
+      <div><label class="meta-label">Y-Axis Values (Comma-separated numbers):</label><input type="text" id="chartYValues" class="meta-text" value="0.15, 0.19, 0.48, 0.71"></div>
+    </div>
+    <div style="text-align:right;display:flex;justify-content:flex-end;gap:8px;"><button class="btn btn-navy" onclick="confirmInsertChart()">Insert Chart</button><button class="btn btn-gold" onclick="closeChartModal()">Cancel</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="addSubModal">
+  <div class="modal-box">
+    <div class="modal-title"><span>➕ Add Custom Manuscript Subsection</span><button class="modal-close-btn" onclick="closeAddSubModal()">✕</button></div>
+    <div style="margin-bottom:12px;"><label class="meta-label">Title:</label><input type="text" id="newSubTitle" class="meta-text" placeholder="e.g., 2.3 Cross-Scale Spatial Representation Validation Protocol"></div>
+    <div style="margin-bottom:12px;"><label class="meta-label">Word Target:</label><input type="text" id="newSubTarget" class="meta-text" placeholder="e.g., 120–180 words"></div>
+    <div style="margin-bottom:15px;"><label class="meta-label">Prompt / Guidance:</label><input type="text" id="newSubPrompt" class="meta-text" placeholder="Guidance for this subsection..."></div>
+    <div style="text-align:right;display:flex;justify-content:flex-end;gap:8px;"><button class="btn btn-navy" onclick="confirmAddSub()">Add Subsection</button><button class="btn btn-gold" onclick="closeAddSubModal()">Cancel</button></div>
+  </div>
+</div>
+
+<div id="printManuscriptContainer"></div>
+<div id="printReportContainer"></div>
+
+<script>
+/* ==========================================================================
+   1. DELGADO NC STATE PH.D. MASTER SUBSECTIONS REPOSITORY (PRE-POPULATED)
+   ========================================================================== */
+function getMasterDefaultSubs() {
+  return {
+    intro: [
+      {
+        id: 1,
+        title: "1.1 Problem Statement, Cross-Scale Fragmentation & The AI Autonomy Gap",
+        placeholder: "Articulate the three convergent empirical gaps (Classroom Implementation Dip, Cross-Scale Fragmentation, and the AI Cognitive Crutch)...",
+        target: "150–250 words",
+        defaultText: "Secondary science learners consistently struggle to coordinate scientific mechanisms across spatial and temporal scales—a foundational Next Generation Science Standards (NGSS) crosscutting concept (Scale, Proportion, and Quantity; Systems and System Models) pioneered by Delgado (2013) and Delgado et al. (2015). Our research program addresses three convergent empirical gaps. First, a convergent mixed-methods classroom investigation (Hasan, Under Review, Improving Schools) reveals a persistent 'implementation dip' during open-ended 5E inquiry, wherein secondary learners stall at macroscopic surface descriptions (Level 1) when modeling cellular respiration and reaction stoichiometry. Second, learners exhibit severe cross-scale fragmentation, treating sub-microscopic entities (10⁻¹⁰ m atoms/molecules) and mesoscopic organelles (10⁻⁵ m mitochondria) as isolated vocabulary labels rather than continuous proportional systems connected to macroscopic phenomena (10² m). Third, while generative AI chatbots are increasingly deployed as classroom scaffolds, our multi-level meta-analysis (k = 29 cohorts, N = 3,709; Hasan, Under Review, Educational Research Review; Hasan, 2027 In Press, JAAIE) demonstrates that generic, unfaded AI functions as a 'cognitive crutch': it inflates immediate task performance (Hedges' g = 0.64 vs. g = 0.18 unassisted) but collapses upon scaffold removal on delayed unassisted transfer (g = 0.19 vs. g = 0.71 for progression-calibrated, faded scaffolding).",
+        assets: [
+          {
+            type: "chart",
+            caption: "Fig. 1 Meta-Analytic Comparison of Immediate Modeling Gain vs. Delayed Unassisted Transfer (Hedges' g; k = 29, N = 3,709)",
+            xLabels: ["Unassisted (Imm)", "Unassisted (Del)", "Generic AI (Imm)", "Generic AI (Del)", "CRISP-AI (Imm)", "CRISP-AI (Del)"],
+            yValues: [0.18, 0.15, 0.64, 0.19, 0.78, 0.71]
+          }
+        ]
+      },
+      {
+        id: 2,
+        title: "1.2 Theoretical Synthesis, Research Questions (RQ1–RQ3) & Falsifiable Hypotheses (H1a–H3b)",
+        placeholder: "Synthesize Delgado's (2015) 4-Level Scale LP with Winne & Hadwin's (1998) COPES model and state RQ1–RQ3 with H1a–H3b...",
+        target: "150–250 words",
+        defaultText: "To transform generative AI from a passive answer generator into an autonomy-building cognitive scaffold (Delgado, 2024, 'Artificial intelligence: Tool or teammate?'), CRISP-AI synthesizes Delgado's (2015) four-level Scale Learning Progression (Level 1 Macro-Only [θ < −1.0 logits] to Level 4 Integrated Multi-Scale Fluency [θ ≥ 1.5 logits]) with Winne and Hadwin's (1998) COPES (Conditions, Operations, Products, Evaluations, Standards) self-regulated learning telemetry architecture. Three research questions guide our sequential three-study dissertation:\n\n• RQ1 (Trace Construct Validity — Study 1, N = 180): Do 100ms multimodal telemetry log features (cross-scale slider sweeps, pause-to-revise latencies > 8s) accurately diagnose student positions on Delgado's 4-level scale LP? Hypothesis H1a posits ordered Rasch Partial Credit Model thresholds (Infit/Outfit MNSQ 0.70–1.30; person separation reliability ≥ 0.80) and strong convergence with Delgado Ordered Multiple-Choice (OMC) items (r ≥ 0.85). Hypothesis H1b predicts latent Hidden Markov Model (HMM) states will align with concurrent think-aloud protocols (n = 24, Cohen's κ ≥ 0.85).\n• RQ2 (Calibration Efficacy — Study 2, N = 240, k = 8 CRT): Does ZPD+1 LP-calibrated Socratic scaffolding accelerate upward Markov transitions and cross-scale CER depth compared to generic AI hints? Hypothesis H2a predicts a significant positive main effect on post-test Rasch logits (Hedges' g ≥ 0.45), while H2b predicts positive moderation for bilingual immersion learners (W = 1).\n• RQ3 (Contingent Fading & Far Transfer — Study 3, N = 240 Week-10): How does logit-contingent scaffold fading impact unassisted far transfer? Hypothesis H3a & H3b predict faded cohorts will prevent post-removal drop-off (g ≥ 0.40, p < .01) and exhibit denser triadic Macro–Micro–Math epistemic networks on novel ecological carbon cycling and chemical equilibrium tasks.",
+        assets: []
+      }
+    ],
+    methods: [
+      {
+        id: 1,
+        title: "2.1 In-Situ 5E Bio/Chem Cross-Scale Modules & 100ms Multimodal Telemetry Capture",
+        placeholder: "Detail the 5E Cellular Respiration (Biology) and Reaction Stoichiometry (Chemistry) cross-scale simulation modules and 100ms UTC telemetry...",
+        target: "150–220 words",
+        defaultText: "During Weeks 2 through 5, secondary STEM students engage in two 5E inquiry units: (1) Biology — Cellular Respiration and Mitochondrial ATP Synthesis, and (2) Chemistry — Sub-Microscopic Reaction Stoichiometry and Limiting Reactant Yields. Within the CRISP-AI simulation workbench, learners manipulate an interactive cross-scale spatial slider spanning 12 orders of magnitude from atomic/molecular interactions (10⁻¹⁰ m: covalent bond cleavage, molar electron transfer) through mesoscopic/cellular structures (10⁻⁵ m: inner mitochondrial membrane cristae proton motive force Δp and reaction vessel collision density) to macroscopic observables (10² m: organismal respirometry oxygen flux and gravimetric precipitate mass). A client-side event listener captures non-intrusive process telemetry at 100ms UTC resolution, extracting four primary behavioral indicators: (a) cross-scale slider ratio sweeps (frequency of deliberate cross-scale boundary crossings coupled with mathematical graph inspection), (b) pause-to-revise latencies (> 8.0 seconds preceding constructive text edits, operationalizing internal COPES metacognitive evaluation), (c) revision burst ratios, and (d) Zero-Paste Anti-Offloading Guardrail interceptions, which block external clipboard injection to prevent superficial LLM copying.",
+        assets: []
+      },
+      {
+        id: 2,
+        title: "2.2 Four-Tier ZPD+1 Socratic Spotter & Two-Tiered Buffered Teacher Triage Protocol",
+        placeholder: "Describe the 4-Tier ZPD+1 Socratic Spotter, Rasch logit-contingent fading rules, and the Two-Tiered Teacher Triage Dashboard...",
+        target: "150–220 words",
+        defaultText: "Rather than supplying direct content answers, CRISP-AI maps real-time student trace vectors onto Delgado's (2015) scale progression levels to trigger Zone of Proximal Development (ZPD+1) Socratic prompts across four calibrated tiers:\n\n• Tier 1 (Orientation Prompt — triggered at LP Level 1, θ < −1.0): Directs attention to uninspected spatial scales (e.g., 'You have described macroscopic gas evolution at 10² m; what happens to the reactant molecules when you zoom the slider to 10⁻¹⁰ m?').\n• Tier 2 (Conceptual Bridge Prompt — triggered at LP Level 2, −1.0 ≤ θ < 0.0): Scaffolds causal connections across adjacent scale orders (e.g., 'How does electron transport across the cristae membrane at 10⁻⁵ m drive the whole-organism oxygen drop measured at 10² m?').\n• Tier 3 (Proportional Reformulation Prompt — triggered at LP Level 3, 0.0 ≤ θ < 1.5): Prompts quantitative stoichiometric coupling across scales.\n• Tier 4 (Metacognitive Boundary Prompt — triggered at LP Level 4, θ ≥ 1.5): Challenges learners to evaluate system equilibrium boundaries while fading lower-level scaffolding.\n\nTo prevent teacher alert fatigue (building on Park et al.'s MetaDash principles), classroom orchestration operates via a Two-Tiered Buffered Triage protocol: Tier 1 stalls (< 180s) are managed autonomously by the ZPD+1 Socratic Spotter, whereas Tier 2 dispatches a targeted notification to the teacher's dashboard only when a student remains stuck at Level 1–2 for > 180 seconds or exhibits a negative progression delta (Δθ < −0.5 logits).",
+        assets: []
+      }
+    ],
+    results: [
+      {
+        id: 1,
+        title: "3.1 Cluster Randomized Trial (CRT) Sampling, Power Architecture & 5-Stage Data Pipeline",
+        placeholder: "Specify the k = 8 classroom CRT design, ICC rho = 0.08, DEFF = 3.32, N_eff = 72.29, and the 5-stage data cleaning pipeline...",
+        target: "160–240 words",
+        defaultText: "To prevent peer treatment contamination within intact secondary science laboratories, Study 2 employs a 2x2 factorial Cluster Randomized Trial (CRT) across k = 8 intact classrooms with m = 30 students per classroom (Total N = 240; 60 students across 2 classrooms per condition C1–C4), stratified within classes by baseline STEM GPA quartiles. Accounting for classroom-level clustering with an Intraclass Correlation Coefficient (ICC) of ρ = 0.08 yields a Design Effect of DEFF = 1 + (m − 1)ρ = 1 + (29 × 0.08) = 3.32, resulting in an Effective Sample Size of N(eff) = 240 / 3.32 = 72.29 students. At α = .05 (two-tailed) with baseline OMC logit (θ₀) and GPA covariates explaining R² = 0.42 of Level-2 variance, this architecture achieves Statistical Power = 0.84 to detect a Minimum Detectable Effect Size (MDES) of Hedges' g ≥ 0.42.\n\nAll raw telemetry and assessment records pass through a pre-registered 5-Stage Data Preparation Pipeline: (1) 100ms UTC JSON time-series synchronization indexed by participant and task phase; (2) Outlier filtering and Winsorization capping extreme non-cognitive idle durations (e.g., physical lab apparatus interruptions > 300 seconds) at the 99th percentile (z > 3.0 or 1.5 × IQR); (3) Missing data handling via Multiple Imputation by Chained Equations (MICE, M = 20 imputations) cross-checked with Full Information Maximum Likelihood (FIML); (4) Z-score standardization (mean = 0, SD = 1) of continuous covariates; and (5) Blinded dual-rater scoring of open-ended CER artifacts enforcing Cohen's κ ≥ 0.85 prior to trace integration.",
+        assets: [
+          {
+            type: "table",
+            caption: "Table 1. 2x2 Factorial Cluster Randomized Trial Conditions & Expected Trajectory Benchmarks (k = 8, N = 240)",
+            headers: ["Condition Code", "Factor A: AI Calibration", "Factor B: Fading & Triage", "Expected Post-LP θ (Logits)", "Expected Wk-10 Transfer (g)"],
+            rows: [
+              ["C1 (Control)", "Generic Uncalibrated AI", "Continuous (Unfaded)", "+0.35 ± 0.42", "0.19 (Collapse)"],
+              ["C2 (Count-Faded)", "Generic Uncalibrated AI", "Task-Count Faded Only", "+0.48 ± 0.40", "0.34 (Partial)"],
+              ["C3 (LP Continuous)", "ZPD+1 Scale LP-Calibrated", "Continuous (Unfaded)", "+1.25 ± 0.38", "0.48 (Moderate)"],
+              ["C4 (Full CRISP-AI)", "ZPD+1 Scale LP-Calibrated", "Logit-Faded + 2-Tier Teacher Triage", "+1.68 ± 0.35", "0.71 (Durable L4)"]
+            ]
+          }
+        ]
+      }
+    ],
+    discussion: [
+      {
+        id: 1,
+        title: "4.1 Psychometric Validation via Masters' Rasch Partial Credit Model (PCM) & Wright Maps",
+        placeholder: "Detail Masters' Rasch PCM calibration, step difficulty thresholds, Infit/Outfit MNSQ bounds, Wright Map alignment, and DIF invariance...",
+        target: "150–220 words",
+        defaultText: "To establish construct validity (RQ1), student responses on Delgado's Ordered Multiple-Choice (OMC) scale items, Assessment of Size and Scale Cognition (ASSC; Delgado, 2025), and rubric-scored cross-scale CER explanations are calibrated jointly using Masters' (1982) Rasch Partial Credit Model (PCM): ln[Pₙᵢₓ / Pₙᵢ(ₓ₋₁)] = θₙ − δᵢₓ, where θₙ represents student n's latent cross-scale proficiency and δᵢₓ denotes the step difficulty threshold between adjacent progression levels x − 1 and x on item i. Construct validity requires monotonically ordered Rasch step thresholds (δᵢ₁ < δᵢ₂ < δᵢ₃) corresponding to transitions across Delgado's Levels 1 through 4, acceptable item fit within 0.70 ≤ Infit/Outfit MNSQ ≤ 1.30, and Person Separation Reliability ≥ 0.80. Wright Maps (person-item construct maps) visually verify that digital trace rubrics span the full ability continuum without ceiling or floor gaps. Measurement invariance across gender and bilingual track subgroups (W = 0 vs. W = 1) is audited via Mantel-Haenszel Differential Item Functioning (DIF), requiring non-significant chi-square contrasts (p > .05, |ΔDIF| < 0.43 logits) to ensure linguistic fairness.",
+        assets: []
+      },
+      {
+        id: 2,
+        title: "4.2 Multi-Level Growth Modeling (3-Level HLM with CR2) & 2×2 Factorial ANCOVA",
+        placeholder: "Explain the 3-Level HLM specification with clubSandwich CR2 standard errors and the 2x2 Factorial ANCOVA with BH-FDR control...",
+        target: "150–220 words",
+        defaultText: "To evaluate scaffolding efficacy across longitudinal measurement waves T1 (Week 1 Baseline) through T4 (Week 10 Far Transfer) while respecting classroom nesting (RQ2), we estimate a 3-Level Hierarchical Linear Model (HLM) with repeated observations (Level 1, time t) nested within students (Level 2, student i) nested within classrooms (Level 3, cluster j): Yₜᵢⱼ = γ₀₀₀ + γ₁₀₀(Timeₜᵢⱼ) + γ₀₁₀(Calibⱼ) + γ₁₁₀(Timeₜᵢⱼ × Calibⱼ) + β₀₁ⱼ(GPAᵢⱼ) + β₀₂ⱼ(Wᵢⱼ) + u₀₀ⱼ + r₀ᵢⱼ + eₜᵢⱼ. Because k = 8 clusters can induce downward bias in asymptotic maximum-likelihood standard errors, all fixed-effect hypothesis tests apply Pustejovsky and Tipton's (2018) bias-reduced linearization cluster-robust variance estimator (clubSandwich CR2) with Satterthwaite degrees of freedom. For Week-10 cross-sectional far transfer comparisons (RQ3), a 2x2 Factorial ANCOVA models main effects of Calibration (αᵢ), Fading (βⱼ), and their interaction (αβ)ᵢⱼ adjusting for centered baseline logit θ₀, reporting Partial Eta Squared (ηₚ²) and small-sample bias-corrected Hedges' g (factor J), with family-wise discovery controlled via the Benjamini-Hochberg False Discovery Rate (BH-FDR, q < .05).",
+        assets: []
+      }
+    ],
+    references: [
+      {
+        id: 1,
+        title: "5.1 Machine Learning Process Decoding: HMM, Lag Sequential Analysis, ENA & TreeSHAP",
+        placeholder: "Detail the Hidden Markov Model (Viterbi/Baum-Welch), LSA (z > 1.96), Epistemic Network Analysis (ENA), and XGBoost + TreeSHAP...",
+        target: "160–240 words",
+        defaultText: "To open the 'black box' of real-time cross-scale sensemaking, four complementary computational analytics triangulate student process data:\n\n1. Hidden Markov Models (HMM) & Lag Sequential Analysis (LSA): Observable 100ms telemetry emissions Oₜ are mapped onto four latent states S = {S₁, S₂, S₃, S₄} corresponding to Delgado's LP Levels 1–4 via Baum-Welch Expectation-Maximization, with individual trajectories decoded via the Viterbi algorithm and model parsimony adjudicated by BIC. Lag Sequential Analysis computes Bakeman and Gottman adjusted residuals (z > 1.96, p < .05) to test whether ZPD+1 Socratic prompts followed by reflective pauses (> 8s) significantly trigger upward L2 → L3 and L3 → L4 transitions.\n2. Epistemic Network Analysis (ENA): Student CER discourse and think-aloud transcripts are segmented into moving 4-utterance stanza windows, accumulating co-occurrences among Macroscopic Phenomenon, Cellular/Mesoscopic Process, Sub-Microscopic Particle, and Stoichiometric/Proportional Math codes. Spherical normalization (vᵢ = cᵢ / ‖cᵢ‖) and Singular Value Decomposition (SVD) project networks into low-dimensional space, with Mann-Whitney U tests evaluating centroid shifts toward integrated triadic connections.\n3. Glass-Box XGBoost & TreeSHAP Attribution: A regularized gradient-boosted decision tree classifier predicts real-time LP mastery (target 5-fold cross-validated AUC ≥ 0.85), while exact TreeSHAP values (φᵢ) quantify the marginal contribution of each telemetry feature—ensuring every automated Socratic prompt and Tier-2 teacher alert is fully interpretable to classroom educators.",
+        assets: []
+      },
+      {
+        id: 2,
+        title: "5.2 Key Foundational & Methodological References (APA 7th Edition)",
+        placeholder: "Provide complete APA 7th edition bibliographic citations anchoring the NC State Ph.D. research plan...",
+        target: "6–10 formal citations",
+        defaultText: "• Delgado, C. (2013). Cross-cultural study of understanding of scale and measurement: Does the metric system make a difference? International Journal of Science Education, 35(8), 1277–1298. https://doi.org/10.1080/09500693.2013.779761\n• Delgado, C. (2024). Artificial intelligence: Tool or teammate? Journal of Research in Science Teaching, 61(4), 751–758. https://doi.org/10.1002/tea.21938\n• Delgado, C. (2025). Measuring size and scale: The development and validation of the Assessment of Size and Scale Cognition (ASSC). Research in Science Education, 55(1), 112–134. https://doi.org/10.1007/s11165-024-10189-2\n• Delgado, C., Stevens, S. Y., Shin, N., & Krajcik, J. (2015). A learning progression for spatial scale: Development and validation of an ordered multiple-choice assessment. Journal of Research in Science Teaching, 52(4), 520–549. https://doi.org/10.1002/tea.21205\n• Delgado, C., et al. (2026). Advancing interdisciplinary science education: Validating the Interdisciplinary Science Assessment of Carbon Cycling II through internal structure and external factors. Research in Science Education, 56, 45–68.\n• Hasan, M. S. (2027, In Press). Generative AI adoption and self-regulated inquiry in secondary STEM education: A systematic synthesis. Journal of Applied Artificial Intelligence in Education (JAAIE).\n• Hasan, M. S. (Under Review). From clicks to constructs: A three-level meta-analysis of adaptive AI scaffolding and delayed unassisted transfer in K–12 science inquiry (k = 29, N = 3,709). Educational Research Review.\n• Jones, M. G., Taylor, A. R., & Falvo, M. R. (2009). Extreme science: From nano to galactic. NSTA Press.\n• Park, S., & Oliver, J. S. (2008). Revisiting the conceptualization of pedagogical content knowledge (PCK): PCK as a conceptual tool to understand teachers as professionals. Research in Science Education, 38(3), 261–284.\n• Winne, P. H., & Hadwin, A. F. (1998). Studying as self-regulated learning. In D. J. Hacker, J. Dunlosky, & A. C. Graesser (Eds.), Metacognition in educational theory and practice (pp. 277–304). Lawrence Erlbaum.",
+        assets: []
+      }
+    ],
+    transfer: [
+      {
+        id: 1,
+        title: "6.1 Week-10 Unassisted Far Transfer CER Synthesis (100% Scaffold Withdrawn) & OSF/IRB Safeguards",
+        placeholder: "Formulate an unassisted Level-4 multi-scale CER synthesis on Ecological Carbon Cycling or Le Chatelier Equilibrium, and document OSF/IRB protocols...",
+        target: "150–220 words",
+        defaultText: "[CLAIM — Multi-Scale Ecological Carbon Transfer (Aligned with Delgado, 2026 Carbon Cycling II)]: A +2.5°C pelagic warming anomaly disproportionately accelerates heterotrophic mitochondrial respiration relative to phytoplankton RuBisCO carboxylation, shifting marine trophic cascades from net carbon sequestration to net atmospheric CO₂ efflux.\n\n[EVIDENCE — Cross-Scale Quantitative Coupling]: At the molecular scale (10⁻⁹ m), thermal kinetic energy increases O₂ competitive inhibition against CO₂ at the RuBisCO active site, reducing carboxylation efficiency by 18% while accelerating mitochondrial electron transport chain turnover (Q₁₀ ≈ 2.4 vs. photosynthetic Q₁₀ ≈ 1.5). At the cellular scale (10⁻⁵ m), phytoplankton net ATP and triose-phosphate export declines by 22% per cell cycle. Across macroscopic trophic levels (10² m to 10⁵ m), applying the ≈10% ecological Lindeman efficiency rule, a 22% base reduction in primary fixed carbon compounds exponentially across secondary zooplankton and tertiary piscivore biomass, reducing deep-ocean particulate organic carbon (POC) export flux.\n\n[REASONING & METHODOLOGICAL SAFEGUARDS]: By coordinating enzymatic reaction kinetics (10⁻⁹ m), organelle chemiosmotic energy balances (10⁻⁵ m), and biosphere carbon reservoirs (10⁵ m) without external AI prompts, this response demonstrates Level-4 Multi-Scale Systems Fluency (θ ≥ 1.5 logits). All experimental protocols incorporate a 1-Week Hawthorne Warmup period, blinded dual-rater scoring (κ ≥ 0.85), Open Science Framework (OSF) pre-registration of H1a–H3b, and NC State University IRB / FERPA compliance with AES-256 encrypted telemetry storage.",
+        assets: []
+      }
+    ]
+  };
+}
+
+let sectionSubs = getMasterDefaultSubs();
+
+/* ==========================================================================
+   2. FORMAL SRL TRACE ONTOLOGY & TELEMETRY STATE (WINNE & HADWIN COPES)
+   ========================================================================== */
+const SRL_OPERATIONS = {
+  TASK_DEF:   { code: "OP_TASK_DEFINITION", weight: 0.90, desc: "Inspecting scale anchors / task criteria" },
+  PLANNING:   { code: "OP_GOAL_PLANNING",   weight: 0.85, desc: "Reflective pause (>8s) & baseline OMC calibration" },
+  ENACTING:   { code: "OP_CONTENT_ENACTING", weight: 0.95, desc: "Drafting cross-scale CER scientific prose" },
+  MONITORING: { code: "OP_META_MONITORING", weight: 0.88, desc: "Cross-scale slider sweep & Reference Bank audit" },
+  EVALUATING: { code: "OP_SELF_EVALUATION", weight: 0.92, desc: "Pause-to-revise cycle & power calculation" },
+  HELP_SEEK:  { code: "OP_HELP_SEEKING",    weight: 0.85, desc: "ZPD+1 Socratic prompt / Tier-2 Teacher Triage" },
+  OFFLOADING: { code: "OP_OFFLOAD_ATTEMPT", weight: 1.00, desc: "Intercepted clipboard copy-paste attempt" }
+};
+
+let telemetry = {
+  participant_id: "NCSU_PHD_HASAN_2027",
+  session_id: "S_DELGADO_" + Date.now(),
+  current_condition: "C4",
+  rasch_theta: 0.82,
+  lp_level: 3,
+  slider_sweeps: 4,
+  last_slider_zone: "cell",
+  total_clicks: 14,
+  total_pauses: 3,
+  max_pause_ms: 11200,
+  current_pause_ms: 0,
+  total_keystrokes: 420,
+  total_backspaces: 38,
+  total_revisions: 19,
+  total_wpm: 46,
+  blocked_pastes: 0,
+  teacher_alerts: 0,
+  active_state: "flow",
+  fading_state: {
+    competency_score: 84,
+    scaffold_tier_allowed: 3
+  },
+  srl_trace_stream: [],
+  teacher_action_log: []
+};
+
+let currentSection = "setup";
+let unlockedSections = new Set(["setup", "intro", "methods", "results", "discussion", "references", "transfer"]);
+let completedSections = new Set(["setup", "intro", "methods", "results", "discussion", "references"]);
+let sectionTimers = {
+  intro: 40 * 60,
+  methods: 40 * 60,
+  results: 40 * 60,
+  discussion: 40 * 60,
+  references: 40 * 60,
+  transfer: 30 * 60
+};
+
+let activeTimerInterval = null;
+let pauseWatchInterval = null;
+let lastKeystrokeTime = Date.now();
+let activeTargetSubForAsset = { sec: null, subId: null };
+let activeTargetSubForShaper = { sec: null, subId: null };
+let activeTargetSubForRename = { sec: null, subId: null };
+let hasTriggeredStagnationAlert = false;
+let activeEditorContext = { sec: "intro", subId: 1 };
+let isPauseEpisodeActive = false;
+let pauseEpisodeStartTime = null;
+
+const CONDITION_META = {
+  C1: { label: "C1: Generic AI + Continuous Scaffolding", ai: "generic", fading: "continuous", teacher: "standard" },
+  C2: { label: "C2: Generic AI + Contingent Faded", ai: "generic", fading: "faded", teacher: "standard" },
+  C3: { label: "C3: ZPD+1 LP-Calibrated + Continuous", ai: "calibrated", fading: "continuous", teacher: "standard" },
+  C4: { label: "C4: ZPD+1 LP + Contingent Faded + Teacher Triage", ai: "calibrated", fading: "faded", teacher: "enhanced" }
+};
+
+function isEnhancedTeacher() { return ["C4", "C2"].includes(telemetry.current_condition); }
+function isRestrictedAI()   { return ["C1", "C2"].includes(telemetry.current_condition); }
+
+/* ==========================================================================
+   3. CUSTOM IN-PAGE NOTIFICATION TOAST (NO BROWSER ALERTS)
+   ========================================================================== */
+let noticeTimeout = null;
+function showSystemNotification(title, message) {
+  const toast = document.getElementById("sysNoticeToast");
+  const titleEl = document.getElementById("sysNoticeTitle");
+  const bodyEl = document.getElementById("sysNoticeBody");
+  if (!toast || !titleEl || !bodyEl) return;
+  titleEl.innerText = title;
+  bodyEl.innerText = message;
+  toast.classList.add("show");
+  if (noticeTimeout) clearTimeout(noticeTimeout);
+  noticeTimeout = setTimeout(() => toast.classList.remove("show"), 4200);
+}
+
+/* ==========================================================================
+   4. INITIALIZATION & STATE MANAGEMENT
+   ========================================================================== */
+window.addEventListener("DOMContentLoaded", () => {
+  attachGlobalAntiPaste();
+  renderAllSubsections();
+  populateDefaultTextsIfEmpty();
+  restoreStateFromLocalStorage();
+  attachGlobalTraceListeners();
+  applyConditionToUI();
+  recalculateBaselineLogit();
+  updateScaleWorkbench();
+  recalculateCrtPower();
+  startTelemetryWatchers();
+  updateTelemetryUI();
+  logSrlTrace(SRL_OPERATIONS.TASK_DEF, "system_boot", { event: "CRISP_AI_v2_Delgado_Initialized" });
+});
+
+function populateDefaultTextsIfEmpty() {
+  ["intro", "methods", "results", "discussion", "references", "transfer"].forEach(sec => {
+    (sectionSubs[sec] || []).forEach(sub => {
+      const el = document.getElementById(`text-${sec}-${sub.id}`);
+      if (el && !el.value.trim() && sub.defaultText) {
+        el.value = sub.defaultText;
+      }
+    });
+  });
+  updateWordCounts();
+}
+
+function loadDelgadoMasterExemplar() {
+  try {
+    localStorage.removeItem("crisp_ai_ncsu_delgado_v3_clean_state");
+  } catch (e) {}
+  sectionSubs = getMasterDefaultSubs();
+  unlockedSections = new Set(["setup", "intro", "methods", "results", "discussion", "references", "transfer"]);
+  completedSections = new Set(["setup", "intro", "methods", "results", "discussion", "references"]);
+  renderAllSubsections();
+  populateDefaultTextsIfEmpty();
+  recalculateBaselineLogit();
+  updateScaleWorkbench();
+  recalculateCrtPower();
+  updateTelemetryUI();
+  saveStateToLocalStorage();
+  showSystemNotification("⚡ Master Exemplar Restored", "Loaded full NC State Ph.D. Research Plan & Cross-Scale Telemetry Exemplar for Dr. Cesar Delgado.");
+}
+
+function logSrlTrace(srlOp, targetId, metadata = {}) {
+  const record = {
+    participant_id: telemetry.participant_id,
+    session_id: telemetry.session_id,
+    timestamp_utc: new Date().toISOString(),
+    section_id: currentSection,
+    srl_operation: srlOp.code,
+    srl_category: srlOp.desc,
+    diagnostic_weight: srlOp.weight,
+    event_target: targetId || "system",
+    rasch_theta: telemetry.rasch_theta,
+    lp_level: telemetry.lp_level,
+    slider_sweeps: telemetry.slider_sweeps,
+    latency_ms: Date.now() - lastKeystrokeTime,
+    wpm: telemetry.total_wpm || 0,
+    revisions: telemetry.total_revisions || 0,
+    state_inferred: telemetry.active_state,
+    condition: telemetry.current_condition,
+    metadata: metadata
+  };
+  telemetry.srl_trace_stream.push(record);
+  saveStateToLocalStorage();
+}
+
+/* ==========================================================================
+   5. DELGADO (2015) RASCH LOGIT & CROSS-SCALE WORKBENCH ENGINE
+   ========================================================================== */
+function recalculateBaselineLogit() {
+  const bioLevel = parseInt(document.getElementById("omcItemBio")?.value || "3", 10);
+  const chemLevel = parseInt(document.getElementById("omcItemChem")?.value || "4", 10);
+  const gpaQuartile = parseInt(document.getElementById("baselinePriorKnowledge")?.value || "3", 10);
+  const bilingualW = parseInt(document.getElementById("metaBilingualTrack")?.value || "1", 10);
+
+  const levelToLogit = { 1: -1.35, 2: -0.35, 3: 0.65, 4: 1.75 };
+  const baseTheta = (levelToLogit[bioLevel] + levelToLogit[chemLevel]) / 2;
+  const gpaAdj = (gpaQuartile - 2.5) * 0.18;
+  const sweepBonus = Math.min(0.45, telemetry.slider_sweeps * 0.05);
+
+  const theta = parseFloat((baseTheta + gpaAdj + sweepBonus).toFixed(2));
+  telemetry.rasch_theta = theta;
+
+  let lpLevel = 1;
+  let lpName = "Macro-Only / Isolated Scale";
+  if (theta >= 1.5) {
+    lpLevel = 4;
+    lpName = "Integrated Multi-Scale Fluency";
+  } else if (theta >= 0.0) {
+    lpLevel = 3;
+    lpName = "Emergent Cross-Scale Alignment";
+  } else if (theta >= -1.0) {
+    lpLevel = 2;
+    lpName = "Unimodal / Discrete Scale Jump";
+  }
+  telemetry.lp_level = lpLevel;
+
+  const sign = theta >= 0 ? "+" : "";
+  const omcBadge = document.getElementById("omcCalculatedBadge");
+  if (omcBadge) {
+    omcBadge.innerHTML = `θ<sub>pre</sub> = ${sign}${theta.toFixed(2)} logits | LP Level ${lpLevel}: ${lpName} (<em>W</em>=${bilingualW})`;
+  }
+  const topBadge = document.getElementById("topRaschBadge");
+  if (topBadge) {
+    topBadge.innerText = `📐 θ = ${sign}${theta.toFixed(2)} logits (LP Level ${lpLevel})`;
+  }
+  const sideTheta = document.getElementById("sidebarThetaVal");
+  if (sideTheta) sideTheta.innerText = `${sign}${theta.toFixed(2)} logits`;
+  const sideLp = document.getElementById("sidebarLpBadge");
+  if (sideLp) sideLp.innerText = `LP Level ${lpLevel}`;
+  const sideDesc = document.getElementById("sidebarLpDesc");
+  if (sideDesc) sideDesc.innerText = lpName;
+  const tdStatus = document.getElementById("tdStudentStatus");
+  if (tdStatus) tdStatus.innerText = `🟢 LP Level ${lpLevel} (${sign}${theta.toFixed(2)})`;
+
+  assessAndFadeScaffolding(currentSection);
+  saveStateToLocalStorage();
+}
+
+function handleScaleSliderMove(val) {
+  const numVal = parseFloat(val);
+  let zone = "cell";
+  if (numVal <= -7.5) zone = "atomic";
+  else if (numVal >= -1.5) zone = "macro";
+
+  if (zone !== telemetry.last_slider_zone) {
+    telemetry.slider_sweeps++;
+    telemetry.last_slider_zone = zone;
+    logSrlTrace(SRL_OPERATIONS.MONITORING, "cross_scale_slider", { scale_exponent: numVal, new_zone: zone, sweeps: telemetry.slider_sweeps });
+    recalculateBaselineLogit();
+  }
+  updateScaleWorkbench();
+}
+
+function updateScaleWorkbench() {
+  const sliderEl = document.getElementById("crossScaleSlider");
+  const domain = document.getElementById("simDomainSelect")?.value || "bio";
+  const val = parseFloat(sliderEl?.value || "-5");
+
+  let zone = "cell";
+  if (val <= -7.5) zone = "atomic";
+  else if (val >= -1.5) zone = "macro";
+
+  const orderBadge = document.getElementById("scaleOrderBadge");
+  const sweepBadge = document.getElementById("scaleSweepCounterBadge");
+  const titleEl = document.getElementById("scaleMechanismTitle");
+  const descEl = document.getElementById("scaleMechanismDesc");
+  const promptEl = document.getElementById("scaleZpdPromptBox");
+  const svgBox = document.getElementById("scaleSvgBox");
+  const sideSweeps = document.getElementById("sidebarScaleSweeps");
+
+  const sign = telemetry.rasch_theta >= 0 ? "+" : "";
+  if (sweepBadge) sweepBadge.innerText = `🔄 Cross-Scale Sweeps: ${telemetry.slider_sweeps} | θ = ${sign}${telemetry.rasch_theta.toFixed(2)} logits`;
+  if (sideSweeps) sideSweeps.innerText = `${telemetry.slider_sweeps} crossings`;
+
+  if (domain === "bio") {
+    if (zone === "atomic") {
+      if (orderBadge) orderBadge.innerHTML = `Current Scale: 10<sup>${val.toFixed(1)}</sup> m (Sub-Microscopic / Molecular)`;
+      if (titleEl) titleEl.innerText = "Sub-Microscopic Redox Stoichiometry: C₆H₁₂O₆ + 6 O₂ → 6 CO₂ + 6 H₂O";
+      if (descEl) descEl.innerText = "At ~10⁻¹⁰ to 10⁻⁸ m, C–H bond oxidation transfers 24 high-energy electrons via NADH and FADH₂ to molecular O₂ at Cytochrome c Oxidase, driving proton translocation.";
+      if (promptEl) promptEl.innerText = "🎯 ZPD+1 Socratic Probe (Tier 3 Proportionality): 'For every 1 glucose molecule oxidized at 10⁻¹⁰ m, how many O₂ molecules must be reduced, and how does this constrain H⁺ pumping at 10⁻⁵ m?'";
+      if (svgBox) svgBox.innerHTML = `<svg width="190" height="120" viewBox="0 0 190 120"><rect width="190" height="120" rx="6" fill="#132e4a"/><circle cx="50" cy="60" r="22" fill="#e53935" stroke="#fff" stroke-width="2"/><text x="50" y="64" fill="#fff" font-size="11" font-weight="bold" text-anchor="middle">6 O₂</text><line x1="75" y1="60" x2="115" y2="60" stroke="#ffe082" stroke-width="3"/><circle cx="140" cy="60" r="26" fill="#00897b" stroke="#fff" stroke-width="2"/><text x="140" y="58" fill="#fff" font-size="10" font-weight="bold" text-anchor="middle">24 e⁻</text><text x="140" y="71" fill="#ffe082" font-size="9" text-anchor="middle">NADH→ATP</text><text x="95" y="22" fill="#a7ffeb" font-size="10" text-anchor="middle">10⁻¹⁰ m Molecular Redox</text></svg>`;
+    } else if (zone === "cell") {
+      if (orderBadge) orderBadge.innerHTML = `Current Scale: 10<sup>${val.toFixed(1)}</sup> m (Cellular / Mitochondrial Organelle)`;
+      if (titleEl) titleEl.innerText = "Mitochondrial Cristae Proton Motive Force (Δp) & ATP Synthase Rotor";
+      if (descEl) descEl.innerText = "At ~10⁻⁶ to 10⁻⁵ m, H⁺ accumulation in the intermembrane space establishes an electrochemical gradient (ΔpH + ΔΨ) that drives F₀F₁-ATP synthase (~30–32 ATP per glucose).";
+      if (promptEl) promptEl.innerText = "🎯 ZPD+1 Socratic Probe (Tier 2 Conceptual Bridge): 'How does the surface-area folding of the inner mitochondrial cristae at 10⁻⁶ m amplify macroscopic oxygen uptake at 10² m?'";
+      if (svgBox) svgBox.innerHTML = `<svg width="190" height="120" viewBox="0 0 190 120"><rect width="190" height="120" rx="6" fill="#132e4a"/><ellipse cx="95" cy="65" rx="75" ry="38" fill="#1b4d3e" stroke="#81c784" stroke-width="2.5"/><path d="M 35 65 Q 55 35 70 65 T 105 65 T 140 65" fill="none" stroke="#ffe082" stroke-width="2.5"/><text x="95" y="20" fill="#a7ffeb" font-size="10" text-anchor="middle">10⁻⁵ m Mitochondrial Cristae</text><text x="95" y="92" fill="#fff" font-size="10" font-weight="bold" text-anchor="middle">Δp → ~30–32 ATP / Glc</text></svg>`;
+    } else {
+      if (orderBadge) orderBadge.innerHTML = `Current Scale: 10<sup>${val.toFixed(1)}</sup> m (Macroscopic / Organismal Respirometry)`;
+      if (titleEl) titleEl.innerText = "Macroscopic Respirometer Pressure Drop & Whole-Organism VO₂ Flux";
+      if (descEl) descEl.innerText = "At ~10⁻¹ to 10² m, germinating seeds or exercising tissues consume O₂ and exhale CO₂ (absorbed by KOH), producing a measurable manometric fluid displacement proportional to cellular ATP demand.";
+      if (promptEl) promptEl.innerText = "🎯 ZPD+1 Socratic Probe (Tier 1 Orientation): 'Don't stop at visible manometer movement—zoom the slider to 10⁻⁵ m and 10⁻¹⁰ m to explain which sub-microscopic reaction consumes the O₂ gas.'";
+      if (svgBox) svgBox.innerHTML = `<svg width="190" height="120" viewBox="0 0 190 120"><rect width="190" height="120" rx="6" fill="#132e4a"/><rect x="30" y="38" width="55" height="62" rx="6" fill="#263238" stroke="#90caf9" stroke-width="2"/><text x="57" y="72" fill="#ffe082" font-size="10" text-anchor="middle">KOH +</text><text x="57" y="85" fill="#81c784" font-size="10" text-anchor="middle">Seeds</text><path d="M 85 50 L 145 50 L 145 95" fill="none" stroke="#ff8a80" stroke-width="4"/><text x="135" y="38" fill="#ff8a80" font-size="10" font-weight="bold" text-anchor="middle">ΔP (-O₂)</text><text x="95" y="20" fill="#a7ffeb" font-size="10" text-anchor="middle">10² m Macroscopic Respirometry</text></svg>`;
+    }
+  } else {
+    if (zone === "atomic") {
+      if (orderBadge) orderBadge.innerHTML = `Current Scale: 10<sup>${val.toFixed(1)}</sup> m (Atomic / Sub-Microscopic Particle Ratio)`;
+      if (titleEl) titleEl.innerText = "Sub-Microscopic Discrete Particle Ratio: 2 H₂ + 1 O₂ → 2 H₂O";
+      if (descEl) descEl.innerText = "At 10⁻¹⁰ m, chemical reactions occur via discrete integer molecular collisions. Every 1 O₂ molecule requires exactly 2 H₂ molecules; excess reactant particles remain unreacted.";
+      if (promptEl) promptEl.innerText = "🎯 ZPD+1 Socratic Probe (Tier 3 Proportionality): 'How do you scale this 2:1 discrete molecular ratio at 10⁻¹⁰ m across Avogadro's constant (6.02×10²³) to predict gram yields at 10² m?'";
+      if (svgBox) svgBox.innerHTML = `<svg width="190" height="120" viewBox="0 0 190 120"><rect width="190" height="120" rx="6" fill="#132e4a"/><circle cx="45" cy="50" r="10" fill="#4fc3f7"/><circle cx="62" cy="50" r="10" fill="#4fc3f7"/><circle cx="45" cy="80" r="10" fill="#4fc3f7"/><circle cx="62" cy="80" r="10" fill="#4fc3f7"/><circle cx="115" cy="65" r="15" fill="#ef5350"/><circle cx="140" cy="65" r="15" fill="#ef5350"/><text x="95" y="22" fill="#a7ffeb" font-size="10" text-anchor="middle">10⁻¹⁰ m Discrete 2 H₂ : 1 O₂</text><text x="95" y="108" fill="#ffe082" font-size="10" text-anchor="middle">Sub-Micro Limiting Collision</text></svg>`;
+    } else if (zone === "cell") {
+      if (orderBadge) orderBadge.innerHTML = `Current Scale: 10<sup>${val.toFixed(1)}</sup> m (Mesoscopic / Local Concentration &amp; Collision Flux)`;
+      if (titleEl) titleEl.innerText = "Mesoscopic Boundary Layer & Local Molar Concentration Gradient";
+      if (descEl) descEl.innerText = "At 10⁻⁵ m, local reactant depletion creates diffusion gradients as limiting O₂ molecules are exhausted within micro-volume reaction zones.";
+      if (promptEl) promptEl.innerText = "🎯 ZPD+1 Socratic Probe (Tier 2 Conceptual Bridge): 'As limiting reactant concentration drops toward zero at 10⁻⁵ m, why does the macroscopic product curve plateau at 10² m?'";
+      if (svgBox) svgBox.innerHTML = `<svg width="190" height="120" viewBox="0 0 190 120"><rect width="190" height="120" rx="6" fill="#132e4a"/><line x1="25" y1="95" x2="165" y2="95" stroke="#fff" stroke-width="2"/><line x1="25" y1="30" x2="25" y2="95" stroke="#fff" stroke-width="2"/><path d="M 25 90 L 95 40 L 160 40" fill="none" stroke="#00e676" stroke-width="3"/><line x1="95" y1="30" x2="95" y2="95" stroke="#ffeb3b" stroke-dasharray="4"/><text x="95" y="20" fill="#a7ffeb" font-size="10" text-anchor="middle">10⁻⁵ m Stoichiometric Equivalence</text></svg>`;
+    } else {
+      if (orderBadge) orderBadge.innerHTML = `Current Scale: 10<sup>${val.toFixed(1)}</sup> m (Macroscopic / Gravimetric Lab Balance Yield)`;
+      if (titleEl) titleEl.innerText = "Macroscopic Gravimetric Yield & Limiting Reactant Mass Plateau";
+      if (descEl) descEl.innerText = "At 10² m, reacting 2.0 g H₂ (1.0 mol) with 8.0 g O₂ (0.25 mol) yields exactly 9.0 g H₂O (0.50 mol), leaving 1.0 g of unreacted H₂ gas in the vessel.";
+      if (promptEl) promptEl.innerText = "🎯 ZPD+1 Socratic Probe (Tier 4 Equilibrium Limit): 'Why does adding more H₂ mass at 10² m produce zero additional grams of H₂O unless O₂ molar supply is increased?'";
+      if (svgBox) svgBox.innerHTML = `<svg width="190" height="120" viewBox="0 0 190 120"><rect width="190" height="120" rx="6" fill="#132e4a"/><rect x="45" y="45" width="100" height="50" rx="4" fill="#37474f" stroke="#ffe082" stroke-width="2"/><text x="95" y="74" fill="#00e676" font-size="14" font-weight="bold" text-anchor="middle">9.00 g H₂O</text><text x="95" y="22" fill="#a7ffeb" font-size="10" text-anchor="middle">10² m Analytical Mass Balance</text></svg>`;
+    }
+  }
+}
+
+/* ==========================================================================
+   6. INTERACTIVE CRT STATISTICAL POWER & DESIGN EFFECT CALCULATOR
+   ========================================================================== */
+function recalculateCrtPower() {
+  const k = parseFloat(document.getElementById("calcClustersK")?.value || "8");
+  const m = parseFloat(document.getElementById("calcClusterSizeM")?.value || "30");
+  const rho = parseFloat(document.getElementById("calcIccRho")?.value || "0.08");
+  const g = parseFloat(document.getElementById("calcTargetG")?.value || "0.42");
+
+  const totalN = Math.round(k * m);
+  const deff = 1 + (m - 1) * rho;
+  const nEff = totalN / deff;
+
+  const r2Cov = 0.42;
+  const ncp = g * Math.sqrt(nEff / (4 * (1 - r2Cov)));
+  const zScore = ncp - 1.96;
+  const power = 1 / (1 + Math.exp(-1.702 * zScore));
+  const clampedPower = Math.min(0.99, Math.max(0.10, power));
+
+  const outBox = document.getElementById("crtFormulaOutput");
+  if (outBox) {
+    outBox.innerHTML = `<strong>Design Effect (DEFF):</strong> DEFF = 1 + (${m} - 1)(${rho.toFixed(2)}) = <strong>${deff.toFixed(2)}</strong> &nbsp;|&nbsp; <strong>Total Sample (N):</strong> <strong>${totalN}</strong> &nbsp;|&nbsp; <strong>Effective Sample (<em>N</em><sub>eff</sub>):</strong> ${totalN} / ${deff.toFixed(2)} = <strong>${nEff.toFixed(2)}</strong> &nbsp;|&nbsp; <strong>Statistical Power (α = .05, MDES g = ${g.toFixed(2)}):</strong> <strong>${clampedPower.toFixed(2)}</strong>`;
+  }
+  const badge = document.getElementById("powerStatusBadge");
+  if (badge) {
+    if (clampedPower >= 0.80) {
+      badge.style.color = "#1b5e20";
+      badge.innerText = `✅ Power = ${clampedPower.toFixed(2)} (Adequately Powered ≥ 0.80)`;
+    } else {
+      badge.style.color = "#b71c1c";
+      badge.innerText = `⚠️ Power = ${clampedPower.toFixed(2)} (Underpowered < 0.80 — Increase k or m)`;
+    }
+  }
+  logSrlTrace(SRL_OPERATIONS.EVALUATING, "crt_power_calculator", { k, m, rho, deff: deff.toFixed(2), power: clampedPower.toFixed(2) });
+}
+
+function switchTransferScenario(val) {
+  const box = document.getElementById("transferPromptDisplay");
+  if (!box) return;
+  if (val === "eco") {
+    box.innerHTML = `<strong>Ecological Systems Prompt (Aligned with Delgado et al., 2026 Carbon Cycling II):</strong> Formulate an unassisted Level-4 Claim–Evidence–Reasoning (CER) synthesis explaining how a +2.5°C ocean warming perturbation alters phytoplankton RuBisCO carboxylation kinetics (10⁻⁹ m), net primary cellular productivity (10⁻⁵ m), and pelagic trophic biomass transfer (10⁵ m).`;
+  } else {
+    box.innerHTML = `<strong>Chemical Equilibrium Perturbation Prompt (Le Chatelier Cross-Scale Dynamics):</strong> Formulate an unassisted Level-4 Claim–Evidence–Reasoning (CER) synthesis explaining how a sudden pressure compression on the N₂O₄(g) ⇌ 2 NO₂(g) system alters forward/reverse molecular collision frequencies (10⁻¹⁰ m), mesoscopic relaxation kinetics (10⁻⁵ m), and macroscopic spectrophotometric absorbance at 400 nm (10² m).`;
+  }
+  logSrlTrace(SRL_OPERATIONS.TASK_DEF, "transfer_domain_switch", { domain: val });
+}
+
+/* ==========================================================================
+   7. SUBSECTIONS RENDERING & IN-SITU ZPD+1 SCAFFOLDING
+   ========================================================================== */
+function renderAllSubsections() {
+  const sections = ["intro", "methods", "results", "discussion", "references", "transfer"];
+  sections.forEach(sec => renderSectionSubs(sec));
+}
+
+function renderSectionSubs(sec) {
+  const container = document.getElementById(`subs-container-${sec}`);
+  if (!container) return;
+  container.innerHTML = "";
+
+  const subs = sectionSubs[sec] || [];
+  subs.forEach(sub => {
+    const card = document.createElement("div");
+    card.className = "subsection-block";
+    card.id = `sub-block-${sec}-${sub.id}`;
+
+    const isTransfer = (sec === "transfer");
+
+    card.innerHTML = `
+      <div class="subsection-header">
+        <span class="subsection-title">
+          <span id="title-text-${sec}-${sub.id}">${sub.title}</span>
+        </span>
+        <div class="sub-controls">
+          ${!isTransfer ? `
+            <button class="btn-asset" onclick="openTableModalFor('${sec}', ${sub.id})">📊 + Table</button>
+            <button class="btn-asset" onclick="openChartModalFor('${sec}', ${sub.id})">📈 + Graph</button>
+          ` : `<span style="font-size:11px;color:#b71c1c;font-weight:bold;">100% Faded Far Transfer Benchmark</span>`}
+          <button class="sub-icon-btn" onclick="openRenameSubModal('${sec}', ${sub.id})">✏️ Rename</button>
+        </div>
+      </div>
+
+      ${!isTransfer ? `
+      <div class="inline-ai-spotter" id="spotter-${sec}-${sub.id}">
+        <div class="spotter-header">
+          <div>
+            <span style="font-weight:bold;color:#0d47a1;">🧠 4-Tier ZPD+1 Socratic Spotter (Delgado Scale LP):</span>
+            <span class="spotter-status-pill status-flow" id="spotter-pill-${sec}-${sub.id}">🟢 Flow State</span>
+          </div>
+          <span style="font-size:11px;color:#2e7d32;font-weight:bold;" id="spotter-timer-${sec}-${sub.id}">⏱️ Active Pause: 0s</span>
+        </div>
+        <div class="spotter-actions">
+          <button class="spotter-btn spotter-btn-l1" onclick="triggerInlineScaffold('${sec}', ${sub.id}, 1)">💡 Tier 1: Scale Orientation</button>
+          <button class="spotter-btn spotter-btn-l2" onclick="triggerInlineScaffold('${sec}', ${sub.id}, 2)">🔄 Tier 2: Cross-Scale Bridge</button>
+          <button class="spotter-btn spotter-btn-l3" onclick="triggerInlineScaffold('${sec}', ${sub.id}, 3)">📐 Tier 3: Proportional Math</button>
+          <button class="spotter-btn spotter-btn-l4" onclick="triggerInlineScaffold('${sec}', ${sub.id}, 4)">⭐ Tier 4: Equilibrium Limit</button>
+          <button class="spotter-btn spotter-btn-shape" onclick="openShaperFor('${sec}', ${sub.id})">✨ ZPD+1 Writing Shaper</button>
+        </div>
+        <div class="spotter-response-area" id="spotter-res-${sec}-${sub.id}"></div>
+      </div>
+      ` : `
+      <div style="background:#fff3e0;border:1px solid #ffcc80;padding:8px 12px;border-radius:3px;margin-bottom:10px;font-size:12.5px;color:#e65100;">
+        🔒 <strong>Week-10 Contingent Fading Protocol Enforced:</strong> All ZPD+1 Socratic spotters and sentence frames are 100% withdrawn to evaluate unassisted far transfer (H3a: g ≥ 0.40).
+      </div>
+      `}
+
+      <textarea id="text-${sec}-${sub.id}" class="editor-textarea" placeholder="${sub.placeholder}" oninput="handleSubInput('${sec}', ${sub.id})">${sub.defaultText || ""}</textarea>
+
+      <div class="word-counter-row">
+        <span id="wc-${sec}-${sub.id}">Words: 0 | Target: ${sub.target}</span>
+        <div class="telemetry-micro-stats">
+          <span id="burst-${sec}-${sub.id}">WPM: 0</span>
+        </div>
+      </div>
+
+      <div class="sub-assets-area" id="assets-${sec}-${sub.id}"></div>
+    `;
+
+    container.appendChild(card);
+
+    const textarea = card.querySelector(`#text-${sec}-${sub.id}`);
+    attachAntiPaste(textarea);
+    attachTelemetryToEditor(textarea, sec, sub.id);
+
+    if (sub.assets && sub.assets.length > 0) {
+      renderSubAssets(sec, sub.id);
+    }
+  });
+
+  enforceFadingRulesInUI();
+}
+
+function triggerInlineScaffold(sec, subId, level) {
+  const resArea = document.getElementById(`spotter-res-${sec}-${subId}`);
+  if (!resArea) return;
+
+  if (level > 1 && isRestrictedAI()) {
+    logSrlTrace(SRL_OPERATIONS.HELP_SEEK, `sub_${sec}_${subId}`, { action: "blocked_by_generic_condition", level });
+    resArea.style.display = "block";
+    resArea.innerHTML = `🔒 <strong>Condition ${telemetry.current_condition} (Generic Uncalibrated AI):</strong> ZPD+1 LP-calibrated Tiers 2–4 are locked in this condition. Only generic Tier-1 prompts are active.`;
+    return;
+  }
+
+  if (level > telemetry.fading_state.scaffold_tier_allowed && ["C2", "C4"].includes(telemetry.current_condition)) {
+    logSrlTrace(SRL_OPERATIONS.HELP_SEEK, `sub_${sec}_${subId}`, { action: "faded_by_rasch_logit", level, theta: telemetry.rasch_theta });
+    resArea.style.display = "block";
+    resArea.innerHTML = `📉 <strong>Contingent Scaffold Faded (θ = +${telemetry.rasch_theta.toFixed(2)} logits):</strong> Because your demonstrated cross-scale competency has reached LP Level ${telemetry.lp_level}, Tier ${level} scaffolding is faded to cultivate autonomous reasoning.`;
+    return;
+  }
+
+  telemetry.total_clicks++;
+  logSrlTrace(SRL_OPERATIONS.HELP_SEEK, `sub_${sec}_${subId}`, { action: "zpd_scaffold_triggered", tier: level, theta: telemetry.rasch_theta });
+
+  const currentText = (document.getElementById(`text-${sec}-${subId}`)?.value || "").trim();
+  const wc = currentText ? currentText.split(/\s+/).filter(Boolean).length : 0;
+
+  let msg = "";
+  if (level === 1) {
+    msg = `💡 <strong>Tier 1 (Orientation Prompt — LP Level 1 Anchor):</strong> Identify the exact spatial orders of magnitude involved: What is observable at the macroscopic lab scale (10<sup>2</sup> m) versus the cellular (10<sup>−5</sup> m) and sub-microscopic (10<sup>−10</sup> m) scales?`;
+  } else if (level === 2) {
+    msg = `🔄 <strong>Tier 2 (Conceptual Bridge Prompt — LP Level 2→3 Transition):</strong> How do sub-microscopic molecular collisions or electron transfers at 10<sup>−10</sup> m causally drive mesoscopic membrane gradients (10<sup>−5</sup> m) and macroscopic outcomes (10<sup>2</sup> m)?`;
+  } else if (level === 3) {
+    msg = `📐 <strong>Tier 3 (Proportional Reformulation Prompt — LP Level 3→4 Transition):</strong> Anchor your causal mechanism mathematically: Express the stoichiometric molar ratio (6 O<sub>2</sub> : 1 C<sub>6</sub>H<sub>12</sub>O<sub>6</sub> or 2 H<sub>2</sub> : 1 O<sub>2</sub>) or Rasch/HLM parameter (θ<sub><em>n</em></sub> − δ<sub><em>ix</em></sub>, DEFF = 3.32) directly alongside your conceptual claim.`;
+  } else {
+    msg = `⭐ <strong>Tier 4 (Metacognitive Equilibrium Limit — LP Level 4 Fluency | ${wc} words):</strong> Evaluate system boundary conditions: Under what perturbation or limiting-reactant threshold does this cross-scale linear proportionality break down?`;
+  }
+
+  resArea.innerHTML = msg;
+  resArea.style.display = "block";
+}
+
+function assessAndFadeScaffolding(sec) {
+  const subs = sectionSubs[sec] || [];
+  let totalWords = 0;
+  subs.forEach(s => {
+    const val = (document.getElementById(`text-${sec}-${s.id}`)?.value || "").trim();
+    totalWords += val ? val.split(/\s+/).filter(Boolean).length : 0;
+  });
+
+  const thetaBonus = Math.round((telemetry.rasch_theta + 1.5) * 18);
+  let comp = Math.min(100, Math.max(15, Math.round((totalWords / 320) * 45 + thetaBonus + (telemetry.slider_sweeps * 3))));
+  telemetry.fading_state.competency_score = comp;
+
+  const compDisplay = document.getElementById("telemetryCompetencyScore");
+  if (compDisplay) compDisplay.innerText = `${comp}/100`;
+
+  const isFadedCondition = ["C2", "C4"].includes(telemetry.current_condition);
+  if (!isFadedCondition) {
+    telemetry.fading_state.scaffold_tier_allowed = 4;
+    const badge = document.getElementById("fadingStatusBadge");
+    if (badge) badge.innerText = "📉 Fading: Continuous (Unfaded)";
+  } else if (telemetry.rasch_theta >= 1.5 && comp >= 88) {
+    telemetry.fading_state.scaffold_tier_allowed = 2;
+    const badge = document.getElementById("fadingStatusBadge");
+    if (badge) badge.innerText = "📉 Fading: Tier 1–2 Only (L4 Mastery)";
+  } else if (telemetry.rasch_theta >= 0.0 || comp >= 60) {
+    telemetry.fading_state.scaffold_tier_allowed = 3;
+    const badge = document.getElementById("fadingStatusBadge");
+    if (badge) badge.innerText = "📉 Fading: Tier 1–3 Active";
+  } else {
+    telemetry.fading_state.scaffold_tier_allowed = 4;
+    const badge = document.getElementById("fadingStatusBadge");
+    if (badge) badge.innerText = "📉 Fading: Full Tiers 1–4 Active";
+  }
+
+  enforceFadingRulesInUI();
+}
+
+function enforceFadingRulesInUI() {
+  const allowed = telemetry.fading_state.scaffold_tier_allowed;
+  const restricted = isRestrictedAI();
+  const isFadedCond = ["C2", "C4"].includes(telemetry.current_condition);
+
+  document.querySelectorAll(".spotter-btn-l2").forEach(btn => btn.classList.toggle("gated", restricted));
+  document.querySelectorAll(".spotter-btn-l3").forEach(btn => btn.classList.toggle("gated", restricted || (isFadedCond && allowed < 3)));
+  document.querySelectorAll(".spotter-btn-l4").forEach(btn => btn.classList.toggle("gated", restricted || (isFadedCond && allowed < 4)));
+  document.querySelectorAll(".spotter-btn-shape").forEach(btn => btn.classList.toggle("gated", restricted));
+}
+
+/* ==========================================================================
+   8. WRITING SHAPER (CONSTRAINED REASONING ENGINE)
+   ========================================================================== */
+function openShaperFor(sec, subId) {
+  if (isRestrictedAI()) {
+    showSystemNotification("🔒 Condition Restricted", "ZPD+1 Writing Shaper is disabled under Generic AI conditions (C1/C2). Switch to C3 or C4 to enable.");
+    return;
+  }
+  activeTargetSubForShaper = { sec, subId };
+  telemetry.total_clicks++;
+  const textEl = document.getElementById(`text-${sec}-${subId}`);
+  const currentText = (textEl?.value || "").trim();
+  const subObj = sectionSubs[sec]?.find(s => s.id === subId);
+  const title = subObj?.title || `${sec.toUpperCase()} Subsection ${subId}`;
+
+  document.getElementById("shaperContextInfo").innerHTML = `Diagnostic Scale LP Audit for: <strong>${title}</strong> (Current Live Rasch Ability: <strong>θ = +${telemetry.rasch_theta.toFixed(2)} logits | LP Level ${telemetry.lp_level}</strong>)`;
+  document.getElementById("shaperCurrentText").value = currentText || "[No text written yet]";
+  document.getElementById("shaperAiFeedback").innerHTML = currentText
+    ? `Draft loaded (${currentText.split(/\s+/).filter(Boolean).length} words). Select a diagnostic refinement lens below.`
+    : `<span style="color:#b71c1c;">Please enter initial prose in the subsection editor first.</span>`;
+
+  document.getElementById("shaperModal").classList.add("show");
+  logSrlTrace(SRL_OPERATIONS.MONITORING, `sub_${sec}_${subId}`, { action: "shaper_opened" });
+}
+
+function closeShaperModal() { document.getElementById("shaperModal").classList.remove("show"); }
+
+function runShaperStep(step) {
+  telemetry.total_clicks++;
+  const txt = document.getElementById("shaperCurrentText")?.value || "";
+  const feedbackBox = document.getElementById("shaperAiFeedback");
+  const hasMicro = /10⁻¹⁰|10⁻⁹|atomic|molecular|stoichiometr|molar|electron/i.test(txt);
+  const hasCell = /10⁻⁵|10⁻⁶|mitochondri|cristae|organelle|mesoscopic|membrane/i.test(txt);
+  const hasMacro = /10²|10⁵|macroscopic|organism|yield|respirometr|beaker/i.test(txt);
+
+  if (step === 1) {
+    feedbackBox.innerHTML = `<strong>1. Delgado (2015) Cross-Scale Alignment Audit:</strong><br>
+      • Sub-Microscopic (10<sup>−10</sup> m) Anchor Detected: <strong>${hasMicro ? "✅ Yes" : "⚠️ Missing"}</strong><br>
+      • Cellular/Mesoscopic (10<sup>−5</sup> m) Anchor Detected: <strong>${hasCell ? "✅ Yes" : "⚠️ Missing"}</strong><br>
+      • Macroscopic (10<sup>2</sup> m) Anchor Detected: <strong>${hasMacro ? "✅ Yes" : "⚠️ Missing"}</strong><br><br>
+      <em>Socratic Guidance:</em> To reach LP Level 4 (θ ≥ 1.5 logits), explicitly state how proportional changes at 10<sup>−10</sup> m quantitatively constrain observable yields at 10<sup>2</sup> m.`;
+  } else if (step === 2) {
+    feedbackBox.innerHTML = `<strong>2. Psychometric &amp; Econometric Parameter Audit:</strong><br>
+      Verify that your prose explicitly anchors: (a) Masters' Rasch PCM step thresholds (θ<sub><em>n</em></sub> − δ<sub><em>ix</em></sub>, Infit/Outfit MNSQ 0.70–1.30), (b) CRT Design Effect (DEFF = 3.32, <em>N</em><sub>eff</sub> = 72.29), (c) 3-Level HLM with <code>clubSandwich</code> CR2 errors, and (d) small-sample corrected Hedges' <em>g</em>.`;
+  } else {
+    feedbackBox.innerHTML = `<strong>3. Springer Nature (JOST) &amp; Elsevier (ERR) Register Polish:</strong><br>
+      Ensure cohesive, narrative academic transitions between theoretical grounding and empirical hypotheses, active APA 7th in-text citations (Delgado, 2013, 2015, 2024, 2025; Winne &amp; Hadwin, 1998), and pre-placement table/figure callouts.`;
+  }
+  logSrlTrace(SRL_OPERATIONS.EVALUATING, `shaper_step_${step}`, { step, hasMicro, hasCell, hasMacro });
+}
+
+/* ==========================================================================
+   9. MULTI-FEATURE COGNITIVE DETECTOR (100ms COPES TELEMETRY)
+   ========================================================================== */
+function attachGlobalTraceListeners() {
+  document.addEventListener("click", () => {
+    telemetry.total_clicks++;
+    updateTelemetryUI();
+  });
+}
+
+function attachTelemetryToEditor(textarea, sec, subId) {
+  let burstKeys = 0;
+  let burstStart = Date.now();
+
+  textarea.addEventListener("focus", () => {
+    if (activeEditorContext.sec !== sec || activeEditorContext.subId !== subId) {
+      activeEditorContext = { sec, subId };
+      lastKeystrokeTime = Date.now();
+      telemetry.current_pause_ms = 0;
+      hasTriggeredStagnationAlert = false;
+      logSrlTrace(SRL_OPERATIONS.TASK_DEF, `${sec}_${subId}`, { action: "focus_editor" });
+    }
+  });
+
+  textarea.addEventListener("keydown", (e) => {
+    telemetry.total_keystrokes++;
+    activeEditorContext = { sec, subId };
+
+    if (isPauseEpisodeActive) {
+      const pauseDuration = Date.now() - (pauseEpisodeStartTime || lastKeystrokeTime);
+      logSrlTrace(SRL_OPERATIONS.ENACTING, `${sec}_${subId}`, { action: "pause_to_revise_completed", pause_ms: pauseDuration });
+      isPauseEpisodeActive = false;
+    }
+
+    lastKeystrokeTime = Date.now();
+    hasTriggeredStagnationAlert = false;
+    burstKeys++;
+
+    if (e.key === "Backspace" || e.key === "Delete") {
+      telemetry.total_backspaces++;
+      telemetry.total_revisions++;
+      logSrlTrace(SRL_OPERATIONS.EVALUATING, `${sec}_${subId}`, { action: "revision_edit" });
+    }
+
+    telemetry.current_pause_ms = 0;
+    evaluateTriangulatedCognitiveState(sec, subId);
+  });
+
+  textarea.addEventListener("keyup", () => {
+    const elapsedSec = (Date.now() - burstStart) / 1000;
+    if (elapsedSec > 2) {
+      const wpm = Math.round((burstKeys / 5) / (elapsedSec / 60));
+      const wpmSpan = document.getElementById(`burst-${sec}-${subId}`);
+      if (wpmSpan) wpmSpan.innerText = `WPM: ${wpm}`;
+      telemetry.total_wpm = wpm;
+      burstKeys = 0;
+      burstStart = Date.now();
+    }
+  });
+}
+
+function startTelemetryWatchers() {
+  pauseWatchInterval = setInterval(() => {
+    const idleMs = Date.now() - lastKeystrokeTime;
+    telemetry.current_pause_ms = idleMs;
+
+    if (idleMs > telemetry.max_pause_ms) {
+      telemetry.max_pause_ms = idleMs;
+    }
+
+    const idleSec = Math.floor(idleMs / 1000);
+    const pauseDisplay = document.getElementById("telemetryCurrentPause");
+    if (pauseDisplay) pauseDisplay.innerText = `${idleSec}s`;
+
+    if (idleSec >= 8 && !isPauseEpisodeActive) {
+      isPauseEpisodeActive = true;
+      pauseEpisodeStartTime = Date.now() - idleMs;
+      telemetry.total_pauses++;
+      logSrlTrace(SRL_OPERATIONS.PLANNING, `${activeEditorContext.sec}_${activeEditorContext.subId}`, { action: "reflective_pause_8s_reached", threshold_s: 8 });
+    }
+
+    evaluateTriangulatedCognitiveState(activeEditorContext.sec, activeEditorContext.subId);
+    updateTelemetryUI();
+  }, 1000);
+}
+
+function evaluateTriangulatedCognitiveState(sec, subId) {
+  const idleMs = Date.now() - lastKeystrokeTime;
+  const idleSec = Math.floor(idleMs / 1000);
+  const textEl = document.getElementById(`text-${sec}-${subId}`);
+  const currentText = (textEl?.value || "").trim();
+  const wc = currentText ? currentText.split(/\s+/).filter(Boolean).length : 0;
+  const revRatio = telemetry.total_keystrokes > 0 ? (telemetry.total_backspaces / telemetry.total_keystrokes) : 0;
+
+  let state = "flow";
+  let desc = "Active cross-scale synthesis";
+
+  if (idleSec < 8) {
+    state = "flow";
+    desc = "Active cross-scale synthesis";
+  } else if (idleSec >= 8 && idleSec < 25) {
+    if (revRatio > 0.20) {
+      state = "evaluating";
+      desc = `Pause-to-revise sensemaking (${idleSec}s)`;
+    } else {
+      state = "reflection";
+      desc = `Reflective scale planning (${idleSec}s)`;
+    }
+  } else if (idleSec >= 25 && idleSec < 90) {
+    if (wc < 20) {
+      state = "hesitation";
+      desc = `Scale anchor hesitation (${idleSec}s)`;
+    } else {
+      state = "deliberation";
+      desc = `Multi-scale integration (${idleSec}s)`;
+    }
+  } else if (idleSec >= 90 && idleSec < 180) {
+    state = "struggle";
+    desc = `Tier-1 Socratic Spotter Active (${idleSec}s)`;
+  } else {
+    state = "stagnation";
+    desc = `🚨 Tier-2 Teacher Triage Alert (>180s)`;
+    if (!hasTriggeredStagnationAlert) {
+      triggerBufferedTeacherTriage(sec, subId, idleSec);
+      hasTriggeredStagnationAlert = true;
+    }
+  }
+
+  setLearnerState(state, desc);
+
+  const timerEl = document.getElementById(`spotter-timer-${sec}-${subId}`);
+  if (timerEl) {
+    timerEl.innerText = `⏱️ Active Pause: ${idleSec}s`;
+    timerEl.style.color = idleSec < 8 ? "#2e7d32" : idleSec < 25 ? "#f57f17" : idleSec < 90 ? "#e65100" : "#b71c1c";
+  }
+  updateStatePill(sec, subId, state, desc);
+}
+
+function setLearnerState(state, desc) {
+  telemetry.active_state = state;
+  const descEl = document.getElementById("telemetryStateDesc");
+  if (descEl) descEl.innerText = desc;
+
+  const badge = document.getElementById("sidebarSrlBadge");
+  if (badge) {
+    badge.className = `srl-state-badge status-${state}`;
+    badge.innerText = state.toUpperCase();
+  }
+}
+
+function updateStatePill(sec, subId, state, text) {
+  const pill = document.getElementById(`spotter-pill-${sec}-${subId}`);
+  if (pill) {
+    pill.className = `spotter-status-pill status-${state}`;
+    pill.innerText = text;
+  }
+}
+
+/* ==========================================================================
+   10. TWO-TIERED TEACHER TRIAGE & ORCHESTRATION
+   ========================================================================== */
+function triggerBufferedTeacherTriage(sec, subId, idleSec) {
+  if (!isEnhancedTeacher()) return;
+
+  telemetry.teacher_alerts++;
+  const alertData = {
+    tier: "TIER_2_HUMAN_TEACHER_PUSH",
+    section: sec,
+    subsection: subId,
+    pause_seconds: idleSec,
+    rasch_theta: telemetry.rasch_theta,
+    lp_level: telemetry.lp_level,
+    words: document.getElementById(`text-${sec}-${subId}`)?.value.split(/\s+/).filter(Boolean).length || 0,
+    timestamp: new Date().toLocaleTimeString()
+  };
+
+  logSrlTrace(SRL_OPERATIONS.HELP_SEEK, "tier2_teacher_alert", alertData);
+
+  const logBox = document.getElementById("teacherActionLogHistory");
+  if (logBox) {
+    logBox.innerHTML = `
+      <div style="background:#fff3e0;border-left:3px solid #e65100;padding:6px;margin-bottom:4px;">
+        🚨 [${alertData.timestamp}] <strong>Tier-2 Triage Alert:</strong> Student stalled &gt;180s (${idleSec}s) in ${sec.toUpperCase()}.${subId} at LP Level ${telemetry.lp_level} (θ = ${telemetry.rasch_theta}).
+      </div>
+    ` + logBox.innerHTML;
+  }
+}
+
+function triggerStudentHelpRequest() {
+  telemetry.total_clicks++;
+  if (isEnhancedTeacher()) {
+    telemetry.teacher_alerts++;
+    logSrlTrace(SRL_OPERATIONS.HELP_SEEK, currentSection, { help_type: "student_tier2_direct_request", theta: telemetry.rasch_theta });
+    const logBox = document.getElementById("teacherActionLogHistory");
+    if (logBox) {
+      logBox.innerHTML = `<div style="background:#e3f2fd;border-left:3px solid #0d47a1;padding:6px;margin-bottom:4px;">🙋 [${new Date().toLocaleTimeString()}] <strong>Student Help Signal:</strong> Requested Tier-2 coaching in Stage: ${currentSection.toUpperCase()}.</div>` + logBox.innerHTML;
+    }
+    showSystemNotification("🙋 Tier-2 Help Signaled", "Your request has been queued on the Two-Tiered Teacher Triage Dashboard.");
+  } else {
+    logSrlTrace(SRL_OPERATIONS.HELP_SEEK, currentSection, { help_type: "unmonitored_request" });
+    showSystemNotification("🙋 Help Request Logged", "Logged to research telemetry stream (Teacher Dashboard suppressed in this condition).");
+  }
+  updateTelemetryUI();
+}
+
+function openTeacherDashboard() {
+  telemetry.total_clicks++;
+  if (!isEnhancedTeacher()) {
+    showSystemNotification("🔒 Standard Teacher Condition", "Two-Tiered Teacher Triage Dashboard is active in Condition 4 (and C2). Switch to C4 to inspect.");
+    return;
+  }
+  const meta = CONDITION_META[telemetry.current_condition] || CONDITION_META.C4;
+  document.getElementById("tdConditionLabel").innerText = meta.label;
+
+  const struggleScore = Math.min(100, (telemetry.total_pauses * 3) + (telemetry.blocked_pastes * 15));
+  const struggleLabel = struggleScore > 60 ? "High" : struggleScore > 25 ? "Moderate" : "Low";
+  document.getElementById("tdStruggleScore").innerText = `${struggleLabel} (${struggleScore}%)`;
+
+  const sign = telemetry.rasch_theta >= 0 ? "+" : "";
+  document.getElementById("tdStudentStatus").innerText = `LP Level ${telemetry.lp_level} (${sign}${telemetry.rasch_theta.toFixed(2)})`;
+  document.getElementById("tdTotalPauses").innerText = telemetry.total_pauses;
+  document.getElementById("tdAlertCount").innerText = telemetry.teacher_alerts;
+  document.getElementById("teacherDashboardModal").classList.add("show");
+  logSrlTrace(SRL_OPERATIONS.MONITORING, "teacher_dashboard", { action: "opened" });
+}
+
+function closeTeacherDashboard() { document.getElementById("teacherDashboardModal").classList.remove("show"); }
+
+function logTeacherAction(actionType) {
+  telemetry.total_clicks++;
+  const timestamp = new Date().toLocaleTimeString();
+  telemetry.teacher_action_log.push({ action: actionType, time: timestamp, theta: telemetry.rasch_theta });
+
+  if (actionType === "T2_EXTEND_TIME") {
+    if (sectionTimers[currentSection]) sectionTimers[currentSection] += 600;
+    showSystemNotification("⏱️ Stage Budget Extended", "+10 minutes added to current stage timer.");
+  } else {
+    showSystemNotification("👨‍🏫 Tier-2 Intervention Logged", `Recorded ${actionType} in 100ms UTC telemetry stream.`);
+  }
+
+  const logBox = document.getElementById("teacherActionLogHistory");
+  if (logBox) {
+    logBox.innerHTML = `<div style="padding:4px 0;border-bottom:1px dashed #ddd;">✅ [${timestamp}] <strong>${actionType}</strong> enacted (Student θ = ${telemetry.rasch_theta.toFixed(2)} logits)</div>` + logBox.innerHTML;
+  }
+
+  logSrlTrace(SRL_OPERATIONS.HELP_SEEK, currentSection, { teacher_action: actionType });
+  saveStateToLocalStorage();
+}
+
+/* ==========================================================================
+   11. ZERO-PASTE ANTI-OFFLOADING INTERCEPTOR
+   ========================================================================== */
+function attachGlobalAntiPaste() {
+  document.querySelectorAll("textarea, input").forEach(el => attachAntiPaste(el));
+}
+
+function attachAntiPaste(el) {
+  if (!el) return;
+  el.addEventListener("paste", blockPaste);
+  el.addEventListener("drop", blockPaste);
+  el.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && (e.key === "v" || e.key === "V")) {
+      e.preventDefault(); e.stopPropagation(); handleBlocked(e.target);
+    } else if (e.shiftKey && e.key === "Insert") {
+      e.preventDefault(); e.stopPropagation(); handleBlocked(e.target);
+    }
+  });
+}
+
+function blockPaste(e) {
+  e.preventDefault(); e.stopPropagation();
+  handleBlocked(e.target);
+}
+
+function handleBlocked(el) {
+  telemetry.blocked_pastes++;
+  logSrlTrace(SRL_OPERATIONS.OFFLOADING, el.id || "textarea", { action: "paste_intercepted", blocked_count: telemetry.blocked_pastes });
+
+  if (el.classList) {
+    el.classList.add("paste-blocked");
+    setTimeout(() => el.classList.remove("paste-blocked"), 1000);
+  }
+
+  const toast = document.getElementById("antiPasteToast");
+  if (toast) {
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 4000);
+  }
+
+  const display = document.getElementById("blockedPasteDisplay");
+  if (display) display.innerText = telemetry.blocked_pastes;
+
+  setLearnerState("offloading", "⚠️ Clipboard Offloading Intercepted");
+}
+
+/* ==========================================================================
+   12. NAVIGATION & SECTION TIMERS
+   ========================================================================== */
+function switchSection(sec) {
+  unlockedSections.add(sec);
+  currentSection = sec;
+  telemetry.total_clicks++;
+  logSrlTrace(SRL_OPERATIONS.TASK_DEF, sec, { action: "stage_switch" });
+
+  if (sectionSubs[sec] && sectionSubs[sec].length > 0) {
+    activeEditorContext = { sec, subId: sectionSubs[sec][0].id };
+    lastKeystrokeTime = Date.now();
+    telemetry.current_pause_ms = 0;
+  }
+
+  document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+  const targetTab = document.getElementById(`tab-${sec}`);
+  if (targetTab) {
+    targetTab.classList.remove("locked");
+    targetTab.classList.add("active");
+  }
+
+  document.querySelectorAll(".imrad-section").forEach(s => s.classList.remove("active"));
+  const targetSec = document.getElementById(`sec-${sec}`);
+  if (targetSec) targetSec.classList.add("active");
+
+  startSectionTimer(sec);
+  assessAndFadeScaffolding(sec);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function completeAndUnlockSection(currentSec, nextSec) {
+  telemetry.total_clicks++;
+  completedSections.add(currentSec);
+  unlockedSections.add(nextSec);
+
+  const currentTab = document.getElementById(`tab-${currentSec}`);
+  if (currentTab) currentTab.classList.add("completed");
+
+  const nextTab = document.getElementById(`tab-${nextSec}`);
+  if (nextTab) nextTab.classList.remove("locked");
+
+  logSrlTrace(SRL_OPERATIONS.EVALUATING, currentSec, { action: "stage_completed", nextSec });
+  saveStateToLocalStorage();
+  switchSection(nextSec);
+}
+
+function startSectionTimer(sec) {
+  if (activeTimerInterval) clearInterval(activeTimerInterval);
+  if (sec === "setup") {
+    document.getElementById("sectionTimerDisplay").innerText = "⏱️ Baseline";
+    return;
+  }
+
+  activeTimerInterval = setInterval(() => {
+    if (sectionTimers[sec] > 0) {
+      sectionTimers[sec]--;
+      updateTimerDisplay(sectionTimers[sec]);
+    } else {
+      clearInterval(activeTimerInterval);
+      showSystemNotification("⏱️ Stage Time Budget Reached", `Completed session time budget for ${sec.toUpperCase()}.`);
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  const timerBadge = document.getElementById("sectionTimerDisplay");
+  if (!timerBadge) return;
+  timerBadge.innerText = `⏱️ ${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  timerBadge.className = seconds < 300 ? "timer-badge danger" : seconds < 600 ? "timer-badge warning" : "timer-badge";
+}
+
+function handleSubInput(sec, subId) {
+  const textEl = document.getElementById(`text-${sec}-${subId}`);
+  const text = (textEl?.value || "").trim();
+  const wc = text ? text.split(/\s+/).filter(Boolean).length : 0;
+
+  const wcEl = document.getElementById(`wc-${sec}-${subId}`);
+  const subObj = sectionSubs[sec]?.find(s => s.id === subId);
+  if (wcEl) wcEl.innerText = `Words: ${wc} | Target: ${subObj?.target || "N/A"}`;
+
+  updateWordCounts();
+  assessAndFadeScaffolding(sec);
+  saveStateToLocalStorage();
+}
+
+function updateWordCounts() {
+  let totalWc = 0;
+  const sections = ["intro", "methods", "results", "discussion", "references", "transfer"];
+
+  sections.forEach(sec => {
+    let secWc = 0;
+    (sectionSubs[sec] || []).forEach(s => {
+      const el = document.getElementById(`text-${sec}-${s.id}`);
+      if (el) {
+        const w = el.value.trim().split(/\s+/).filter(Boolean).length;
+        secWc += w;
+        const subWcEl = document.getElementById(`wc-${sec}-${s.id}`);
+        if (subWcEl) subWcEl.innerText = `Words: ${w} | Target: ${s.target || "N/A"}`;
+      }
+    });
+    totalWc += secWc;
+    const secWcDisplay = document.getElementById(`wc-${sec}`);
+    if (secWcDisplay) secWcDisplay.innerText = secWc;
+  });
+
+  const totalDisplay = document.getElementById("totalWordCountDisplay");
+  if (totalDisplay) totalDisplay.innerText = `${totalWc} words`;
+}
+
+function updateTelemetryUI() {
+  const elClicks = document.getElementById("telemetryClicks");
+  if (elClicks) elClicks.innerText = telemetry.total_clicks;
+  const elPauses = document.getElementById("telemetryPauses");
+  if (elPauses) elPauses.innerText = telemetry.total_pauses;
+  const elRevs = document.getElementById("telemetryRevisions");
+  if (elRevs) elRevs.innerText = telemetry.total_revisions;
+  const elMax = document.getElementById("telemetryMaxPause");
+  if (elMax) elMax.innerText = `${Math.round(telemetry.max_pause_ms / 1000)}s`;
+  const elWpm = document.getElementById("telemetryWpm");
+  if (elWpm) elWpm.innerText = telemetry.total_wpm;
+  updateWordCounts();
+}
+
+/* ==========================================================================
+   13. ASSET GENERATOR (SPRINGER TABLES & SVG CHARTS)
+   ========================================================================== */
+function openTableModalFor(sec, subId) {
+  activeTargetSubForAsset = { sec, subId };
+  telemetry.total_clicks++;
+  document.getElementById("tableModal").classList.add("show");
+}
+function closeTableModal() { document.getElementById("tableModal").classList.remove("show"); }
+
+function confirmInsertTable() {
+  const caption = document.getElementById("tblCaption").value.trim() || "Table 1. Empirical Cross-Scale Observations";
+  const headers = document.getElementById("tblHeaders").value.split(",").map(h => h.trim());
+  const rowsRaw = document.getElementById("tblRows").value.trim().split("\n");
+  const rows = rowsRaw.map(r => r.split(",").map(c => c.trim()));
+
+  const sub = sectionSubs[activeTargetSubForAsset.sec]?.find(s => s.id === activeTargetSubForAsset.subId);
+  if (sub) {
+    sub.assets.push({ type: "table", caption, headers, rows });
+    renderSubAssets(activeTargetSubForAsset.sec, activeTargetSubForAsset.subId);
+    saveStateToLocalStorage();
+  }
+  closeTableModal();
+}
+
+function openChartModalFor(sec, subId) {
+  activeTargetSubForAsset = { sec, subId };
+  telemetry.total_clicks++;
+  document.getElementById("chartModal").classList.add("show");
+}
+function closeChartModal() { document.getElementById("chartModal").classList.remove("show"); }
+
+function confirmInsertChart() {
+  const caption = document.getElementById("chartCaption").value.trim() || "Fig. 1 Empirical Effect Size Comparison";
+  const xLabels = document.getElementById("chartXLabels").value.split(",").map(x => x.trim());
+  const yValues = document.getElementById("chartYValues").value.split(",").map(y => parseFloat(y.trim()) || 0);
+
+  const sub = sectionSubs[activeTargetSubForAsset.sec]?.find(s => s.id === activeTargetSubForAsset.subId);
+  if (sub) {
+    sub.assets.push({ type: "chart", caption, xLabels, yValues });
+    renderSubAssets(activeTargetSubForAsset.sec, activeTargetSubForAsset.subId);
+    saveStateToLocalStorage();
+  }
+  closeChartModal();
+}
+
+function renderSubAssets(sec, subId) {
+  const container = document.getElementById(`assets-${sec}-${subId}`);
+  if (!container) return;
+  container.innerHTML = "";
+
+  const sub = sectionSubs[sec]?.find(s => s.id === subId);
+  if (!sub || !sub.assets) return;
+
+  sub.assets.forEach((asset, idx) => {
+    const card = document.createElement("div");
+    card.className = "asset-card";
+
+    if (asset.type === "table") {
+      let thHtml = asset.headers.map(h => `<th>${h}</th>`).join("");
+      let trHtml = asset.rows.map(row => `<tr>${row.map(c => `<td>${c}</td>`).join("")}</tr>`).join("");
+      card.innerHTML = `
+        <div class="asset-card-header">
+          <span>📊 ${asset.caption}</span>
+          <button class="sub-icon-btn" onclick="removeAsset('${sec}', ${subId}, ${idx})">🗑️ Remove</button>
+        </div>
+        <div class="springer-table-container">
+          <table class="springer-table">
+            <thead><tr>${thHtml}</tr></thead>
+            <tbody>${trHtml}</tbody>
+          </table>
+        </div>
+      `;
+    } else if (asset.type === "chart") {
+      const maxVal = Math.max(...asset.yValues, 0.8);
+      let bars = asset.yValues.map((val, i) => {
+        const heightPct = Math.round((val / maxVal) * 115);
+        const barColor = (asset.xLabels[i] || "").includes("Collapse") || val < 0.25 ? "#c62828" : "#00897b";
+        return `
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+            <span style="font-size:11px;font-weight:bold;">g=${val}</span>
+            <div style="width:42px;height:${heightPct}px;background:${barColor};border-radius:2px;"></div>
+            <span style="font-size:10.5px;text-align:center;max-width:75px;font-weight:bold;">${asset.xLabels[i] || ""}</span>
+          </div>
+        `;
+      }).join("");
+
+      card.innerHTML = `
+        <div class="asset-card-header">
+          <span>📈 ${asset.caption}</span>
+          <button class="sub-icon-btn" onclick="removeAsset('${sec}', ${subId}, ${idx})">🗑️ Remove</button>
+        </div>
+        <div style="display:flex;justify-content:space-around;align-items:flex-end;height:175px;padding:12px;background:#fbf9f5;border:1px solid #e0d8cb;border-radius:4px;">
+          ${bars}
+        </div>
+      `;
+    }
+    container.appendChild(card);
+  });
+}
+
+function removeAsset(sec, subId, idx) {
+  const sub = sectionSubs[sec]?.find(s => s.id === subId);
+  if (sub && sub.assets) {
+    sub.assets.splice(idx, 1);
+    renderSubAssets(sec, subId);
+    saveStateToLocalStorage();
+  }
+}
+
+/* ==========================================================================
+   14. CUSTOM & RENAME SUBSECTION MODALS (NO BROWSER PROMPT/ALERT)
+   ========================================================================== */
+let activeAddSec = "intro";
+function openAddSubModal(sec) {
+  activeAddSec = sec;
+  telemetry.total_clicks++;
+  document.getElementById("addSubModal").classList.add("show");
+}
+function closeAddSubModal() { document.getElementById("addSubModal").classList.remove("show"); }
+
+function confirmAddSub() {
+  const title = document.getElementById("newSubTitle").value.trim();
+  const target = document.getElementById("newSubTarget").value.trim() || "120–180 words";
+  const promptText = document.getElementById("newSubPrompt").value.trim();
+
+  if (!title) {
+    showSystemNotification("⚠️ Missing Title", "Please enter a subsection title before adding.");
+    return;
+  }
+
+  const existing = sectionSubs[activeAddSec] || [];
+  const newId = existing.length ? Math.max(...existing.map(s => s.id)) + 1 : 1;
+
+  existing.push({
+    id: newId,
+    title,
+    placeholder: promptText || "Enter scientific prose here...",
+    target,
+    defaultText: "",
+    assets: []
+  });
+
+  closeAddSubModal();
+  renderSectionSubs(activeAddSec);
+  saveStateToLocalStorage();
+  showSystemNotification("➕ Subsection Added", `Added "${title}" to ${activeAddSec.toUpperCase()}.`);
+}
+
+function openRenameSubModal(sec, subId) {
+  const sub = sectionSubs[sec]?.find(s => s.id === subId);
+  if (!sub) return;
+  activeTargetSubForRename = { sec, subId };
+  const input = document.getElementById("renameSubInput");
+  if (input) input.value = sub.title;
+  document.getElementById("renameSubModal").classList.add("show");
+}
+function closeRenameSubModal() { document.getElementById("renameSubModal").classList.remove("show"); }
+
+function confirmRenameSub() {
+  const { sec, subId } = activeTargetSubForRename;
+  const sub = sectionSubs[sec]?.find(s => s.id === subId);
+  const newTitle = document.getElementById("renameSubInput")?.value.trim();
+  if (sub && newTitle) {
+    (sectionSubs[sec] || []).forEach(s => {
+      const el = document.getElementById(`text-${sec}-${s.id}`);
+      if (el) s.defaultText = el.value;
+    });
+    sub.title = newTitle;
+    renderSectionSubs(sec);
+    updateWordCounts();
+    saveStateToLocalStorage();
+  }
+  closeRenameSubModal();
+}
+
+/* ==========================================================================
+   15. OBJECTIVE RUBRIC CALIBRATION & BIAS CALCULATION
+   ========================================================================== */
+function calculateObjectiveCalibrationBias() {
+  const perceived = parseFloat(document.getElementById("postPerceivedScore")?.value || "92");
+  let score = 0;
+
+  let totalWc = 0;
+  ["intro", "methods", "results", "discussion", "references", "transfer"].forEach(s => {
+    (sectionSubs[s] || []).forEach(sub => {
+      const txt = (document.getElementById(`text-${s}-${sub.id}`)?.value || "").trim();
+      totalWc += txt ? txt.split(/\s+/).filter(Boolean).length : 0;
+    });
+  });
+  score += Math.min(25, (totalWc / 900) * 25);
+
+  const fullText = Object.keys(sectionSubs).flatMap(s =>
+    (sectionSubs[s] || []).map(sub => document.getElementById(`text-${s}-${sub.id}`)?.value || "")
+  ).join(" ");
+
+  if (/Delgado|learning progression|OMC|scale/i.test(fullText)) score += 15;
+  if (/Rasch|HLM|clubSandwich|DEFF|ANCOVA|Hedges/i.test(fullText)) score += 15;
+  if (/Markov|Viterbi|ENA|TreeSHAP|XGBoost/i.test(fullText)) score += 15;
+  if (telemetry.slider_sweeps >= 2) score += 10;
+  if (telemetry.total_revisions >= 5) score += 10;
+  if (/doi\.org|10\.\d{4}/i.test(fullText)) score += 10;
+
+  const objective = Math.round(Math.min(100, score));
+  const bias = (perceived - objective).toFixed(1);
+
+  return {
+    perceived,
+    objective,
+    bias,
+    interpretation: bias > 10 ? "Overconfident (Illusion of Competence)" : bias < -10 ? "Underconfident (Underestimating Mastery)" : "Accurately Calibrated (Optimal Metacognitive Alignment)"
+  };
+}
+
+/* ==========================================================================
+   16. EXPORTS, SPRINGER PDF COMPILER & TRACE REPORT GENERATION
+   ========================================================================== */
+function exportTraceDataset() {
+  telemetry.total_clicks++;
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(telemetry, null, 2));
+  const a = document.createElement("a");
+  a.setAttribute("href", dataStr);
+  a.setAttribute("download", `CRISP_AI_Delgado_Telemetry_${telemetry.participant_id}_${Date.now()}.json`);
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  showSystemNotification("💾 JSON Telemetry Exported", "Saved 100ms UTC JSON trace tree for R/Python analysis.");
+}
+
+function exportTraceCSV() {
+  telemetry.total_clicks++;
+  const cols = ["participant_id","session_id","timestamp_utc","section_id","srl_operation","srl_category","rasch_theta","lp_level","slider_sweeps","latency_ms","wpm","revisions","state_inferred","condition"];
+  const lines = [cols.join(",")];
+  telemetry.srl_trace_stream.forEach(t => {
+    lines.push([
+      t.participant_id, t.session_id, t.timestamp_utc, t.section_id, t.srl_operation,
+      `"${t.srl_category}"`, t.rasch_theta, t.lp_level, t.slider_sweeps, t.latency_ms,
+      t.wpm, t.revisions, t.state_inferred, t.condition
+    ].join(","));
+  });
+  const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `CRISP_AI_Delgado_Trace_${telemetry.participant_id}_${Date.now()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  showSystemNotification("📤 CSV Trace Exported", "Saved tidy CSV dataset for Rasch/HLM/HMM pipelines.");
+}
+
+function generateDiagnosticReport() {
+  telemetry.total_clicks++;
+  const cal = calculateObjectiveCalibrationBias();
+  const totalWc = document.getElementById("totalWordCountDisplay")?.innerText || "0 words";
+
+  let reportHtml = `
+    <div class="springer-print-header">
+      <div style="font-size:9pt;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#990000;margin-bottom:4pt;">NORTH CAROLINA STATE UNIVERSITY • CRISP-AI v2.0 TELEMETRY &amp; PSYCHOMETRIC REPORT</div>
+      <div class="springer-print-title">Cross-Scale Learning Progression (Delgado, 2015) &amp; COPES Process Telemetry Compendium</div>
+      <div class="springer-print-authors">Candidate: MD Showket Hasan | Prospective Advisor: Dr. Cesar Delgado | Condition: ${telemetry.current_condition}</div>
+      <div class="springer-print-affil">Evaluated under Delgado (2015) 4-Level Scale LP, Masters' Rasch PCM &amp; Winne-Hadwin (1998) COPES Architecture</div>
+    </div>
+
+    <div class="springer-print-h2">1. EXECUTIVE TELEMETRY &amp; RASCH SCALE LP PROFILE</div>
+    <table class="springer-print-table">
+      <thead><tr><th>Diagnostic Parameter</th><th>Observed Metric</th><th>Psychometric &amp; Theoretical Interpretation</th></tr></thead>
+      <tbody>
+        <tr><td>Live Rasch Ability (θ) &amp; LP Level</td><td>θ = ${telemetry.rasch_theta.toFixed(2)} logits (LP Level ${telemetry.lp_level})</td><td>Delgado (2015) 4-Level Cross-Scale Continuum (-1.0, 0.0, +1.5 logit thresholds)</td></tr>
+        <tr><td>Cross-Scale Slider Ratio Sweeps</td><td>${telemetry.slider_sweeps} sweeps</td><td>Navigation across Atomic (10⁻¹⁰ m), Cellular (10⁻⁵ m) &amp; Macro (10² m) scales</td></tr>
+        <tr><td>Reflective Pause-to-Revise (&gt;8s)</td><td>${telemetry.total_pauses} episodes (Max: ${Math.round(telemetry.max_pause_ms/1000)}s)</td><td>Internal COPES metacognitive evaluation prior to constructive text revision</td></tr>
+        <tr><td>Keystrokes / Revisions</td><td>${telemetry.total_keystrokes} / ${telemetry.total_revisions}</td><td>Iterative cross-scale CER refinement</td></tr>
+        <tr><td>Zero-Paste Guardrail Interceptions</td><td>${telemetry.blocked_pastes} blocked</td><td>100% Anti-Offloading integrity enforced (Delgado, 2024 AI Teammate model)</td></tr>
+        <tr><td>Total Manuscript Volume</td><td>${totalWc}</td><td>Complete 7-Stage NC State Ph.D. Research Proposal</td></tr>
+      </tbody>
+    </table>
+
+    <div class="springer-print-h2">2. CRITERION-REFERENCED METACOGNITIVE CALIBRATION</div>
+    <div class="springer-print-p">
+      <strong>Perceived Rigor Rating:</strong> ${cal.perceived}% | <strong>Objective Rubric Score:</strong> ${cal.objective}% | <strong>Calibration Bias:</strong> ${cal.bias} (${cal.interpretation})
+    </div>
+
+    <div class="springer-print-h2">3. 100ms UTC COPES PROCESS AUDIT STREAM (LATEST EVENTS)</div>
+    <table class="springer-print-table" style="font-size:7.5pt;">
+      <thead><tr><th>UTC Timestamp</th><th>Stage</th><th>COPES Operation</th><th>Target</th><th>Rasch θ</th><th>LP Level</th><th>State</th></tr></thead>
+      <tbody>
+        ${telemetry.srl_trace_stream.slice(-12).map(t => `
+          <tr><td>${t.timestamp_utc}</td><td>${t.section_id}</td><td>${t.srl_operation}</td><td>${t.event_target}</td><td>${t.rasch_theta}</td><td>L${t.lp_level}</td><td>${t.state_inferred}</td></tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `;
+
+  const reportDiv = document.getElementById("printReportContainer");
+  reportDiv.innerHTML = reportHtml;
+  reportDiv.classList.add("print-active");
+  document.getElementById("printManuscriptContainer").classList.remove("print-active");
+  setTimeout(() => { window.print(); setTimeout(() => reportDiv.classList.remove("print-active"), 1000); }, 250);
+}
+
+function compileAndPrintPdf() {
+  telemetry.total_clicks++;
+  const projTitle = document.getElementById("displayProjectTitle").value.trim() || "Modeling Learning Progressions in Secondary STEM Through Adaptive Process Telemetry";
+  const studentNames = document.getElementById("metaStudent1")?.value.trim() || "MD Showket Hasan";
+  const advisors = [document.getElementById("metaAdvisor1")?.value.trim(), document.getElementById("metaAdvisor2")?.value.trim()].filter(Boolean).join(" | ");
+  const school = document.getElementById("metaSchool")?.value.trim() || "Department of STEM Education, North Carolina State University";
+  const discipline = document.getElementById("metaDiscipline")?.value || "Science Education (Fall 2027)";
+
+  let bodyHtml = `
+    <div class="springer-print-header">
+      <div style="font-size:9pt;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#990000;margin-bottom:4pt;">NORTH CAROLINA STATE UNIVERSITY • PH.D. RESEARCH PLAN (${discipline.toUpperCase()})</div>
+      <div class="springer-print-title">${projTitle}</div>
+      <div class="springer-print-authors">${studentNames}</div>
+      <div class="springer-print-affil">${school}<br>${advisors}</div>
+    </div>
+  `;
+
+  const sections = [
+    { key: "intro", title: "1.0 INTRODUCTION, EMPIRICAL RATIONALE & 3-STUDY ARCHITECTURE" },
+    { key: "methods", title: "2.0 IN-SITU 5E CROSS-SCALE INQUIRY, TELEMETRY & ZPD+1 SCAFFOLDING" },
+    { key: "results", title: "3.0 CLUSTER RANDOMIZED TRIAL POWER (DEFF = 3.32) & 5-STAGE PIPELINE" },
+    { key: "discussion", title: "4.0 PSYCHOMETRIC (RASCH PCM) & INFERENTIAL MODELS (3-LEVEL HLM & ANCOVA)" },
+    { key: "references", title: "5.0 MACHINE LEARNING SUITE (HMM, LSA, ENA, TREESHAP) & REFERENCES" },
+    { key: "transfer", title: "6.0 WEEK-10 UNASSISTED FAR TRANSFER BENCHMARK & OSF/IRB SAFEGUARDS" }
+  ];
+
+  sections.forEach(sec => {
+    bodyHtml += `<div class="springer-print-h2">${sec.title}</div>`;
+    (sectionSubs[sec.key] || []).forEach(sub => {
+      const textVal = document.getElementById(`text-${sec.key}-${sub.id}`)?.value.trim() || "[Prose not completed]";
+      bodyHtml += `
+        <div class="springer-print-h3">${sub.title}</div>
+        <div class="springer-print-p">${textVal.replace(/\n\n/g, '</div><div class="springer-print-p">').replace(/\n/g, '<br>')}</div>
+      `;
+
+      (sub.assets || []).forEach(asset => {
+        if (asset.type === "table") {
+          let ths = asset.headers.map(h => `<th>${h}</th>`).join("");
+          let trs = asset.rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`).join("");
+          bodyHtml += `
+            <div style="margin:8pt 0;">
+              <div class="springer-print-caption">${asset.caption}</div>
+              <table class="springer-print-table"><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>
+            </div>
+          `;
+        } else if (asset.type === "chart") {
+          const maxVal = Math.max(...asset.yValues, 0.8);
+          let printBars = asset.yValues.map((val, i) => {
+            const hPct = Math.round((val / maxVal) * 65);
+            return `
+              <div style="display:inline-block;text-align:center;margin:0 8pt;vertical-align:bottom;">
+                <div style="font-size:7.5pt;font-weight:bold;">g=${val}</div>
+                <div style="width:24pt;height:${hPct}pt;background:#00897b;margin:0 auto;border:0.5pt solid #004d40;"></div>
+                <div style="font-size:6.5pt;margin-top:2pt;">${asset.xLabels[i] || ""}</div>
+              </div>
+            `;
+          }).join("");
+          bodyHtml += `
+            <div style="margin:10pt 0;text-align:center;">
+              <div class="springer-print-caption">${asset.caption}</div>
+              <div style="border:0.75pt solid #999;padding:8pt 5pt;display:inline-block;background:#fafafa;">${printBars}</div>
+            </div>
+          `;
+        }
+      });
+    });
+  });
+
+  const printDiv = document.getElementById("printManuscriptContainer");
+  printDiv.innerHTML = bodyHtml;
+  printDiv.classList.add("print-active");
+  document.getElementById("printReportContainer").classList.remove("print-active");
+  setTimeout(() => { window.print(); setTimeout(() => printDiv.classList.remove("print-active"), 1000); }, 250);
+}
+
+/* ==========================================================================
+   17. LOCAL STORAGE PERSISTENCE
+   ========================================================================= */
+function saveStateToLocalStorage() {
+  try {
+    const data = {
+      timestamp: Date.now(),
+      title: document.getElementById("displayProjectTitle")?.value || "",
+      discipline: document.getElementById("metaDiscipline")?.value || "",
+      school: document.getElementById("metaSchool")?.value || "",
+      bilingualW: document.getElementById("metaBilingualTrack")?.value || "1",
+      omcBio: document.getElementById("omcItemBio")?.value || "3",
+      omcChem: document.getElementById("omcItemChem")?.value || "4",
+      students: [1,2,3,4,5].map(i => document.getElementById(`metaStudent${i}`)?.value || ""),
+      advisors: [1,2].map(i => document.getElementById(`metaAdvisor${i}`)?.value || ""),
+      prior: document.getElementById("baselinePriorKnowledge")?.value || "3",
+      efficacy: document.getElementById("baselineSelfEfficacy")?.value || "80",
+      sectionSubs,
+      unlockedSections: Array.from(unlockedSections),
+      completedSections: Array.from(completedSections),
+      sectionTimers,
+      telemetry
+    };
+
+    const texts = {};
+    ["intro", "methods", "results", "discussion", "references", "transfer"].forEach(sec => {
+      (sectionSubs[sec] || []).forEach(sub => {
+        texts[`${sec}_${sub.id}`] = document.getElementById(`text-${sec}-${sub.id}`)?.value || "";
+      });
+    });
+    data.texts = texts;
+
+    localStorage.setItem("crisp_ai_ncsu_delgado_v3_clean_state", JSON.stringify(data));
+    const autoPill = document.getElementById("autosaveStatus");
+    if (autoPill) {
+      const d = new Date();
+      autoPill.innerText = `💾 UTC Synced ${String(d.getUTCHours()).padStart(2,'0')}:${String(d.getUTCMinutes()).padStart(2,'0')}:${String(d.getUTCSeconds()).padStart(2,'0')}`;
+    }
+  } catch (e) {
+    console.warn("Storage auto-save notice:", e);
+  }
+}
+
+function restoreStateFromLocalStorage() {
+  try {
+    const raw = localStorage.getItem("crisp_ai_ncsu_delgado_v3_clean_state");
+    if (!raw) return;
+    const data = JSON.parse(raw);
+
+    if (data.title) document.getElementById("displayProjectTitle").value = data.title;
+    if (data.discipline) document.getElementById("metaDiscipline").value = data.discipline;
+    if (data.school) document.getElementById("metaSchool").value = data.school;
+    if (data.bilingualW) document.getElementById("metaBilingualTrack").value = data.bilingualW;
+    if (data.omcBio) document.getElementById("omcItemBio").value = data.omcBio;
+    if (data.omcChem) document.getElementById("omcItemChem").value = data.omcChem;
+
+    if (data.students) {
+      data.students.forEach((s, idx) => {
+        const el = document.getElementById(`metaStudent${idx+1}`);
+        if (el && s) el.value = s;
+      });
+    }
+    if (data.advisors) {
+      data.advisors.forEach((a, idx) => {
+        const el = document.getElementById(`metaAdvisor${idx+1}`);
+        if (el && a) el.value = a;
+      });
+    }
+    if (data.sectionSubs) {
+      sectionSubs = data.sectionSubs;
+      renderAllSubsections();
+    }
+    if (data.texts) {
+      Object.keys(data.texts).forEach(k => {
+        const [sec, subId] = k.split("_");
+        const el = document.getElementById(`text-${sec}-${subId}`);
+        if (el && data.texts[k]) el.value = data.texts[k];
+      });
+    }
+    if (data.telemetry) {
+      telemetry = Object.assign(telemetry, data.telemetry);
+    }
+    updateTelemetryUI();
+  } catch (e) {
+    console.error("Restore state error:", e);
+  }
+}
+
+function openKnowledgeBank() {
+  telemetry.total_clicks++;
+  logSrlTrace(SRL_OPERATIONS.MONITORING, "knowledge_bank", { action: "opened" });
+  document.getElementById("knowledgeBankModal").classList.add("show");
+}
+function closeKnowledgeBank() { document.getElementById("knowledgeBankModal").classList.remove("show"); }
+function openConditionModal() { telemetry.total_clicks++; document.getElementById("conditionModal").classList.add("show"); }
+function closeConditionModal() { document.getElementById("conditionModal").classList.remove("show"); }
+
+function setExperimentCondition(cond) {
+  telemetry.current_condition = cond;
+  applyConditionToUI();
+  assessAndFadeScaffolding(currentSection);
+  logSrlTrace(SRL_OPERATIONS.TASK_DEF, "condition_change", { condition: cond });
+  saveStateToLocalStorage();
+  showSystemNotification("🔬 Condition Updated", `Switched experimental protocol to ${CONDITION_META[cond]?.label || cond}.`);
+}
+
+function applyConditionToUI() {
+  const cond = telemetry.current_condition;
+  const meta = CONDITION_META[cond] || CONDITION_META.C4;
+  const badge = document.getElementById("activeConditionBadge");
+  if (badge) badge.innerText = "🔬 " + meta.label;
+  const radio = document.querySelector(`input[name="expCond"][value="${cond}"]`);
+  if (radio) radio.checked = true;
+
+  const btnPanel = document.getElementById("btnTeacherPanel");
+  const btnHelp = document.getElementById("btnHelpTeacher");
+  if (btnPanel) btnPanel.style.display = isEnhancedTeacher() ? "" : "none";
+  if (btnHelp) btnHelp.style.display = isEnhancedTeacher() ? "" : "none";
+
+  enforceFadingRulesInUI();
+}
+</script>
+</body>
+</html>
